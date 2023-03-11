@@ -16,10 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-class JupiterExtensionContextAdapter implements ExtensionContext {
+public class JupiterExtensionContextAdapter implements ExtensionContext {
     private final LifecycleContext context;
 
-    JupiterExtensionContextAdapter(final LifecycleContext context) {
+    public JupiterExtensionContextAdapter(final LifecycleContext context) {
         this.context = context;
     }
 

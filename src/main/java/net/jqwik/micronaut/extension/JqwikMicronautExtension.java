@@ -23,7 +23,12 @@ public class JqwikMicronautExtension implements RegistrarHook {
     }
 
     private static Store<TestContext> getOrCreateTestContextStore(final Class<?> containerClass, final AnnotatedElement annotatedElement) {
-        final var build = ApplicationContext.builder().build();
+        final var build = ApplicationContext.builder()
+                .packages(containerClass.getPackage().getName())
+                .banner(true)
+                .environments("test")
+                .build()
+                .start();
 
         return Store.getOrCreate(
                 storeIdentifier(containerClass),
