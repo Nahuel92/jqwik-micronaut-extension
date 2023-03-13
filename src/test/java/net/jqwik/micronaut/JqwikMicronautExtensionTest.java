@@ -4,7 +4,8 @@ import io.micronaut.runtime.EmbeddedApplication;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
-import org.junit.jupiter.api.Assertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
 class JqwikMicronautExtensionTest {
@@ -13,7 +14,6 @@ class JqwikMicronautExtensionTest {
 
     @Property(tries = 1)
     void testItWorks() {
-        Assertions.assertTrue(application.isRunning());
+        assertThat(application.isRunning()).isTrue();
     }
-
 }
