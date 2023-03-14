@@ -1,36 +1,30 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.test.annotation.MicronautTestValue;
-import net.jqwik.api.lifecycle.AroundPropertyHook;
-import net.jqwik.api.lifecycle.PropertyExecutionResult;
-import net.jqwik.api.lifecycle.PropertyExecutor;
-import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.api.lifecycle.BeforeContainerHook;
+import net.jqwik.api.lifecycle.ContainerLifecycleContext;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import java.util.List;
-
-public class AroundPropertyMicronaut extends JqwikMicronautExtension implements AroundPropertyHook {
+public class BeforeMicronautContainerHook extends JqwikMicronautExtension implements BeforeContainerHook {
     @Override
-    public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
-                                                  final PropertyExecutor property) {
-        // Without this `beforeClass` here, the test fails. It seems that the initialization done
-        // in the `BeforeContextHook` is lost at this point.
+    public void beforeContainer(final ContainerLifecycleContext context) {
+        // This is called before `aroundProperty` but, when at the time that method executes,
+        // the `applicationContext` (among other stuff) is lost.
         beforeClass(
                 context,
                 context.optionalContainerClass().orElse(null),
                 buildMicronautTestValue(context.optionalContainerClass().orElse(null))
         );
-        beforeEach(
-                context,
-                context.testInstance(),
-                context.targetMethod(),
-                List.of()
-        );
-        return property.execute();
     }
 
+    /**
+     * Builds a {@link MicronautTestValue} object from the provided class (e.g. by scanning annotations).
+     *
+     * @param testClass the class to extract builder configuration from
+     * @return a MicronautTestValue to configure the test application context
+     */
     private MicronautTestValue buildMicronautTestValue(final Class<?> testClass) {
         return AnnotationSupport
                 .findAnnotation(testClass, JqwikMicronautTest.class)

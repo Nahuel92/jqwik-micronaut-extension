@@ -8,7 +8,7 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
-class JqwikMicronautExtensionTest {
+class JqwikMicronautRegistarTest {
     @Inject
     EmbeddedApplication<?> application;
 
