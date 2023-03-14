@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JqwikMicronautTest
 class JqwikMicronautRegistarTest {
     @Inject
-    EmbeddedApplication<?> application;
+    private EmbeddedApplication<?> application;
 
     @Property(tries = 1)
     void testItWorks() {

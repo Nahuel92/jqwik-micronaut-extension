@@ -11,12 +11,8 @@ repositories {
 
 dependencies {
     api("net.jqwik:jqwik:1.7.2")
-
     implementation('io.micronaut.test:micronaut-test-core:3.9.2')
     implementation('io.micronaut:micronaut-context:3.8.7')
-
-    testAnnotationProcessor('io.micronaut:micronaut-inject:3.8.7')
-    testImplementation('io.micronaut:micronaut-inject:3.8.7')
     testImplementation("io.micronaut:micronaut-http-server-netty:3.8.7")
     testImplementation('org.assertj:assertj-core:3.24.2')
 }
