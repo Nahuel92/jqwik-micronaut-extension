@@ -10,13 +10,12 @@ import org.junit.platform.commons.support.AnnotationSupport;
 public class BeforeMicronautContainerHook extends JqwikMicronautExtension implements BeforeContainerHook {
     @Override
     public void beforeContainer(final ContainerLifecycleContext context) {
-        // This is called before `aroundProperty` but, when at the time that method executes,
-        // the `applicationContext` (among other stuff) is lost.
-        beforeClass(
-                context,
-                context.optionalContainerClass().orElse(null),
-                buildMicronautTestValue(context.optionalContainerClass().orElse(null))
-        );
+        EXTENSION_STORE.get()
+                .beforeClass(
+                        context,
+                        context.optionalContainerClass().orElse(null),
+                        buildMicronautTestValue(context.optionalContainerClass().orElse(null))
+                );
     }
 
     /**
@@ -44,7 +43,7 @@ public class BeforeMicronautContainerHook extends JqwikMicronautExtension implem
                 micronautTest.contextBuilder(),
                 micronautTest.transactionMode(),
                 micronautTest.startApplication(),
-                true
+                micronautTest.resolveParameters()
         );
     }
 }
