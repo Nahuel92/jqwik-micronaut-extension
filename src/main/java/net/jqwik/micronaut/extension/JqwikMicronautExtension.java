@@ -25,22 +25,22 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     );
 
     @Override
-    public void beforeEach(final LifecycleContext context, final Object testInstance,
-                           final AnnotatedElement method, final List<Property> propertyAnnotations) {
-        super.beforeEach(context, testInstance, method, propertyAnnotations);
-    }
-
-    @Override
     public void beforeClass(final LifecycleContext context, final Class<?> testClass,
                             final MicronautTestValue testAnnotationValue) {
         super.beforeClass(context, testClass, testAnnotationValue);
     }
 
     @Override
-    protected void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
-                                         final Map<String, Object> testProperties) {
-        final Object o = context.optionalContainerClass().orElse(null);
-        if (o instanceof TestPropertyProvider tpp) {
+    public void beforeEach(final LifecycleContext context, final Object testInstance,
+                           final AnnotatedElement method, final List<Property> propertyAnnotations) {
+        super.beforeEach(context, testInstance, method, propertyAnnotations);
+    }
+
+    @Override
+    public void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
+                                      final Map<String, Object> testProperties) {
+        if (context instanceof PropertyLifecycleContext plc &&
+                plc.testInstance() instanceof TestPropertyProvider tpp) {
             final Map<String, String> properties = tpp.getProperties();
             if (CollectionUtils.isNotEmpty(properties)) {
                 testProperties.putAll(properties);
@@ -72,7 +72,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                                 final Object target = ip.interceptedTarget();
                                 field.set(specInstance, target);
                             }
-                        } catch (IllegalAccessException e) {
+                        } catch (final IllegalAccessException e) {
                             // continue
                         }
                     }

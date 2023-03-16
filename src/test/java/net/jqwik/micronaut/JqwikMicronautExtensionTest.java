@@ -3,6 +3,7 @@ package net.jqwik.micronaut;
 import io.micronaut.runtime.EmbeddedApplication;
 import io.micronaut.test.annotation.MockBean;
 import jakarta.inject.Inject;
+import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
@@ -16,25 +17,30 @@ class JqwikMicronautExtensionTest {
     private EmbeddedApplication<?> application;
 
     @Inject
-    private MyObj myObj;
+    private AppBean appBean;
 
-    @MockBean(MyObj.class)
-    MyObj myObj() {
-        return mock(MyObj.class);
+    @MockBean(AppBean.class)
+    AppBean appBean() {
+        return mock(AppBean.class);
     }
 
     @Property(tries = 1)
-    void testItWorks() {
+    void successOnRunningApplicationContextUsingProperty() {
+        assertThat(application.isRunning()).isTrue();
+    }
+
+    @Property
+    void successOnRunningApplicationContextUsingForAll(@ForAll boolean ignored) {
         assertThat(application.isRunning()).isTrue();
     }
 
     @Property(tries = 1)
-    void testMockWorks() {
-        final var newMessage = "Goodbye world!";
-        when(myObj.myMethod()).thenReturn(newMessage);
+    void successOnReplacingApplicationBeanWithMockBean() {
+        final var mockedMessage = "Goodbye world!";
+        when(appBean.method()).thenReturn(mockedMessage);
 
         // then
-        assertThat(myObj.myMethod()).isEqualTo(newMessage);
+        assertThat(appBean.method()).isEqualTo(mockedMessage);
     }
 }
 
