@@ -3,9 +3,9 @@ package net.jqwik.micronaut.hook;
 import io.micronaut.test.annotation.MicronautTestValue;
 import net.jqwik.api.lifecycle.BeforeContainerHook;
 import net.jqwik.api.lifecycle.ContainerLifecycleContext;
+import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
-import org.junit.platform.commons.support.AnnotationSupport;
 
 public class BeforeMicronautContainerHook extends JqwikMicronautExtension implements BeforeContainerHook {
     @Override
@@ -25,9 +25,10 @@ public class BeforeMicronautContainerHook extends JqwikMicronautExtension implem
      * @return a MicronautTestValue to configure the test application context
      */
     private MicronautTestValue buildMicronautTestValue(final Class<?> testClass) {
-        return AnnotationSupport
-                .findAnnotation(testClass, JqwikMicronautTest.class)
+        return JqwikAnnotationSupport.findContainerAnnotations(testClass, JqwikMicronautTest.class)
+                .stream()
                 .map(this::buildValueObject)
+                .findFirst()
                 .orElse(null);
     }
 

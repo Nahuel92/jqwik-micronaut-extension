@@ -5,6 +5,7 @@ import net.jqwik.api.lifecycle.AroundPropertyHook;
 import net.jqwik.api.lifecycle.PropertyExecutionResult;
 import net.jqwik.api.lifecycle.PropertyExecutor;
 import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 public class AroundPropertyMicronaut extends JqwikMicronautExtension implements AroundPropertyHook {
@@ -16,7 +17,10 @@ public class AroundPropertyMicronaut extends JqwikMicronautExtension implements 
                         context,
                         context.testInstance(),
                         context.targetMethod(),
-                        context.findAnnotationsInContainer(Property.class)
+                        JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
+                                context.optionalElement().orElse(null),
+                                Property.class
+                        )
                 );
         return property.execute();
     }
