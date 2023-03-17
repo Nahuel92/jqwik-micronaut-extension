@@ -1,6 +1,5 @@
 package net.jqwik.micronaut.extension;
 
-import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.test.annotation.MicronautTestValue;
@@ -13,7 +12,8 @@ import net.jqwik.api.lifecycle.PropertyLifecycleContext;
 import net.jqwik.api.lifecycle.Store;
 
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -58,23 +58,27 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
                 .findAny()
                 .ifPresent(specInstance -> {
+                    final var mockBeanMethods = Arrays.stream(specInstance.getClass().getDeclaredMethods())
+                            .filter(e -> e.isAnnotationPresent(MockBean.class))
+                            .toList();
+
                     for (final var injectedField : specDefinition.getInjectedFields()) {
-                        boolean isMock = applicationContext.resolveMetadata(injectedField.getType())
-                                .isAnnotationPresent(MockBean.class);
-                        if (!isMock) {
-                            continue;
-                        }
-                        final Field field = injectedField.getField();
-                        field.setAccessible(true);
-                        try {
-                            final Object mock = field.get(specInstance);
-                            if (mock instanceof InterceptedProxy<?> ip) {
-                                final Object target = ip.interceptedTarget();
-                                field.set(specInstance, target);
-                            }
-                        } catch (final IllegalAccessException e) {
-                            // continue
-                        }
+                        final var mockBeanMethod = mockBeanMethods.stream()
+                                .filter(e -> e.getReturnType().equals(injectedField.getType()))
+                                .findFirst();
+
+                        mockBeanMethod.ifPresent(e -> {
+                                    try {
+                                        final var field = injectedField.getField();
+                                        field.setAccessible(true);
+                                        e.setAccessible(true);
+                                        final Object result = e.invoke(specInstance);
+                                        field.set(specInstance, result);
+                                    } catch (final IllegalAccessException | InvocationTargetException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                        );
                     }
                 });
     }
