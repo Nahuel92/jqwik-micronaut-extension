@@ -1,12 +1,12 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.context.annotation.Property;
-import net.jqwik.api.lifecycle.AroundPropertyHook;
-import net.jqwik.api.lifecycle.PropertyExecutionResult;
-import net.jqwik.api.lifecycle.PropertyExecutor;
-import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import io.micronaut.test.annotation.MicronautTestValue;
+import net.jqwik.api.lifecycle.*;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
+
+import java.util.Map;
 
 public class AroundPropertyMicronaut extends JqwikMicronautExtension implements AroundPropertyHook {
     @Override
@@ -23,5 +23,10 @@ public class AroundPropertyMicronaut extends JqwikMicronautExtension implements 
                         )
                 );
         return property.execute();
+    }
+
+    @Override
+    public void resolveTestProperties(LifecycleContext context, MicronautTestValue testAnnotationValue, Map<String, Object> testProperties) {
+
     }
 }

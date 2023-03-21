@@ -1,11 +1,9 @@
 package net.jqwik.micronaut.extension;
 
 import io.micronaut.context.annotation.Property;
-import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
-import io.micronaut.test.support.TestPropertyProvider;
 import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.api.lifecycle.Lifespan;
 import net.jqwik.api.lifecycle.PropertyLifecycleContext;
@@ -15,14 +13,17 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
-    protected static final Store<JqwikMicronautExtension> EXTENSION_STORE = Store.getOrCreate(
-            JqwikMicronautExtension.class,
-            Lifespan.RUN,
-            JqwikMicronautExtension::new
-    );
+public abstract class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
+    protected final Store<JqwikMicronautExtension> EXTENSION_STORE;
+
+    protected JqwikMicronautExtension() {
+        EXTENSION_STORE = Store.getOrCreate(
+                JqwikMicronautExtension.class,
+                Lifespan.RUN,
+                () -> this
+        );
+    }
 
     @Override
     public void beforeClass(final LifecycleContext context, final Class<?> testClass,
@@ -34,18 +35,6 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     public void beforeEach(final LifecycleContext context, final Object testInstance,
                            final AnnotatedElement method, final List<Property> propertyAnnotations) {
         super.beforeEach(context, testInstance, method, propertyAnnotations);
-    }
-
-    @Override
-    public void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
-                                      final Map<String, Object> testProperties) {
-        if (context instanceof PropertyLifecycleContext plc &&
-                plc.testInstance() instanceof TestPropertyProvider tpp) {
-            final Map<String, String> properties = tpp.getProperties();
-            if (CollectionUtils.isNotEmpty(properties)) {
-                testProperties.putAll(properties);
-            }
-        }
     }
 
     @Override

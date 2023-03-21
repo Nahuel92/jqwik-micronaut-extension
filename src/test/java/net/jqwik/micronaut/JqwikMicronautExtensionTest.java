@@ -36,6 +36,7 @@ class JqwikMicronautExtensionTest {
 
     @Property(tries = 1)
     void successOnReplacingApplicationBeanWithMockBean() {
+        // given
         final var mockedMessage = "Goodbye world!";
         when(appBean.method()).thenReturn(mockedMessage);
 

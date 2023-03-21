@@ -3,9 +3,15 @@ package net.jqwik.micronaut.hook;
 import io.micronaut.test.annotation.MicronautTestValue;
 import net.jqwik.api.lifecycle.BeforeContainerHook;
 import net.jqwik.api.lifecycle.ContainerLifecycleContext;
+import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Map;
 
 public class BeforeMicronautContainerHook extends JqwikMicronautExtension implements BeforeContainerHook {
     @Override
@@ -46,5 +52,38 @@ public class BeforeMicronautContainerHook extends JqwikMicronautExtension implem
                 micronautTest.startApplication(),
                 micronautTest.resolveParameters()
         );
+    }
+
+    @Override
+    protected void resolveTestProperties(LifecycleContext context, MicronautTestValue testAnnotationValue, Map<String, Object> testProperties) {
+        if (context.optionalContainerClass().isEmpty()) {
+            return;
+        }
+
+        final Class<?> testContainerClass = context.optionalContainerClass().get();
+        final var propertiesMethodOptional = Arrays.stream(testContainerClass.getDeclaredMethods())
+                .filter(e -> "getProperties".equals(e.getName()))   // Brittle, I don't like it.
+                .findFirst();
+
+        if (propertiesMethodOptional.isEmpty()) {
+            return;
+        }
+        final var propertiesMethod = propertiesMethodOptional.get();
+        propertiesMethod.setAccessible(true);
+
+        final Map<String, String> dynamicPropertiesToAdd;
+        final Object testClassInstance = context.newInstance(testContainerClass);
+        try {
+            dynamicPropertiesToAdd = getPropertiesFromTestClass(propertiesMethod, testClassInstance);
+        } catch (final IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        testProperties.putAll(dynamicPropertiesToAdd);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> getPropertiesFromTestClass(final Method propertiesMethod, final Object testClassInstance)
+            throws InvocationTargetException, IllegalAccessException {
+        return (Map<String, String>) propertiesMethod.invoke(testClassInstance);
     }
 }

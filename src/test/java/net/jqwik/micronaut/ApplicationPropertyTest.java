@@ -27,7 +27,7 @@ class ApplicationPropertyTest implements TestPropertyProvider {
     @Value("${test.class.property}")
     private String classProperty;
 
-    //@Value("${dynamic.property}")
+    @Value("${dynamic.property}")
     private String dynamicProperty;
 
     @Override
@@ -42,7 +42,7 @@ class ApplicationPropertyTest implements TestPropertyProvider {
         assertThat(testProperty).isEqualTo("world!");
         assertThat(classProperty).isEqualTo("Hello world!");
         assertThat(getTestProperty()).contains("Hello method!");
-        //assertThat(dynamicProperty).isEqualTo("value");
+        assertThat(dynamicProperty).isEqualTo("value");
     }
 
     private Optional<String> getTestProperty() {
