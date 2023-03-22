@@ -19,10 +19,10 @@ class ApplicationPropertyTest implements TestPropertyProvider {
     private EmbeddedApplication<?> application;
 
     @Value("${main.property}")
-    private String mainProperty;
+    private String mainApplicationProperty;
 
     @Value("${test.property}")
-    private String testProperty;
+    private String testApplicationProperty;
 
     @Value("${test.class.property}")
     private String classProperty;
@@ -37,15 +37,15 @@ class ApplicationPropertyTest implements TestPropertyProvider {
 
     @Property
     @io.micronaut.context.annotation.Property(name = "test.method.property", value = "Hello method!")
-    void successOnInjectingApplicationProperties() {
-        assertThat(mainProperty).isEqualTo("Hello");
-        assertThat(testProperty).isEqualTo("world!");
+    void successOnInjectingApplicationPropertiesFromDifferentInjectionPoints() {
+        assertThat(mainApplicationProperty).isEqualTo("Hello");
+        assertThat(testApplicationProperty).isEqualTo("world!");
         assertThat(classProperty).isEqualTo("Hello world!");
-        assertThat(getTestProperty()).contains("Hello method!");
+        assertThat(getTestApplicationProperty()).contains("Hello method!");
         assertThat(dynamicProperty).isEqualTo("value");
     }
 
-    private Optional<String> getTestProperty() {
+    private Optional<String> getTestApplicationProperty() {
         return application.getApplicationContext().getProperty("test.method.property", String.class);
     }
 }

@@ -1,20 +1,16 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.test.annotation.MicronautTestValue;
-import io.micronaut.test.support.TestPropertyProvider;
 import net.jqwik.api.lifecycle.BeforeContainerHook;
 import net.jqwik.api.lifecycle.ContainerLifecycleContext;
-import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
-import java.util.Map;
-
-public class BeforeMicronautContainerHook extends JqwikMicronautExtension implements BeforeContainerHook {
+public class BeforeMicronautContainerHook implements BeforeContainerHook {
     @Override
     public void beforeContainer(final ContainerLifecycleContext context) {
-        EXTENSION_STORE.get()
+        JqwikMicronautExtension.EXTENSION_STORE.get()
                 .beforeClass(
                         context,
                         context.optionalContainerClass().orElse(null),
@@ -50,19 +46,5 @@ public class BeforeMicronautContainerHook extends JqwikMicronautExtension implem
                 micronautTest.startApplication(),
                 micronautTest.resolveParameters()
         );
-    }
-
-    @Override
-    protected void resolveTestProperties(LifecycleContext context, MicronautTestValue testAnnotationValue, Map<String, Object> testProperties) {
-        if (context.optionalContainerClass().isEmpty()) {
-            return;
-        }
-        final Class<?> testContainerClass = context.optionalContainerClass().get();
-        final Object testClassInstance = context.newInstance(testContainerClass);
-
-        if (testClassInstance instanceof TestPropertyProvider propertyProvider) {
-            final Map<String, String> dynamicPropertiesToAdd = propertyProvider.getProperties();
-            testProperties.putAll(dynamicPropertiesToAdd);
-        }
     }
 }

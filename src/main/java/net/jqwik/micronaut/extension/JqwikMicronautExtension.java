@@ -1,9 +1,11 @@
 package net.jqwik.micronaut.extension;
 
+import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
+import io.micronaut.test.support.TestPropertyProvider;
 import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.api.lifecycle.Lifespan;
 import net.jqwik.api.lifecycle.PropertyLifecycleContext;
@@ -13,16 +15,17 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-public abstract class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
-    protected final Store<JqwikMicronautExtension> EXTENSION_STORE;
+public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
+    public static final Store<JqwikMicronautExtension> EXTENSION_STORE = Store.getOrCreate(
+            JqwikMicronautExtension.class,
+            Lifespan.RUN,
+            JqwikMicronautExtension::new
+    );
 
-    protected JqwikMicronautExtension() {
-        EXTENSION_STORE = Store.getOrCreate(
-                JqwikMicronautExtension.class,
-                Lifespan.RUN,
-                () -> this
-        );
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
     }
 
     @Override
@@ -70,5 +73,19 @@ public abstract class JqwikMicronautExtension extends AbstractMicronautExtension
                         );
                     }
                 });
+    }
+
+    @Override
+    protected void resolveTestProperties(LifecycleContext context, MicronautTestValue testAnnotationValue, Map<String, Object> testProperties) {
+        if (context.optionalContainerClass().isEmpty()) {
+            return;
+        }
+        final Class<?> testContainerClass = context.optionalContainerClass().get();
+        final Object testClassInstance = context.newInstance(testContainerClass);
+
+        if (testClassInstance instanceof TestPropertyProvider propertyProvider) {
+            final Map<String, String> dynamicPropertiesToAdd = propertyProvider.getProperties();
+            testProperties.putAll(dynamicPropertiesToAdd);
+        }
     }
 }
