@@ -8,6 +8,7 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.core.util.StringUtils;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
@@ -26,8 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class ParameterResolver implements ResolveParameterHook {
-    @SuppressWarnings("unchecked")
-    private static <T> Qualifier<T> resolveQualifier(final Argument<?> argument) {
+    private <T> Qualifier<T> resolveQualifier(final Argument<?> argument) {
         final AnnotationMetadata annotationMetadata = Objects.requireNonNull(argument, "Argument cannot be null")
                 .getAnnotationMetadata();
         boolean hasMetadata = annotationMetadata != AnnotationMetadata.EMPTY_METADATA;
@@ -40,13 +40,13 @@ public class ParameterResolver implements ResolveParameterHook {
         }
 
         if (qualifierTypes.size() == 1) {
-            return Qualifiers.byAnnotation(annotationMetadata, qualifierTypes.iterator().next());
+            return Qualifiers.byAnnotation(annotationMetadata, qualifierTypes.get(0));
         }
 
-        final Qualifier<T>[] qualifiers = qualifierTypes
+        @SuppressWarnings("unchecked") final Qualifier<T>[] qualifiers = qualifierTypes
                 .stream()
-                .map((type) -> Qualifiers.byAnnotation(annotationMetadata, type))
-                .toArray(Qualifier[]::new);
+                .map((type) -> Qualifiers.<T>byAnnotation(annotationMetadata, type))
+                .toArray(Qualifier[]::<T>new);
         return Qualifiers.byQualifiers(qualifiers);
     }
 
@@ -97,34 +97,32 @@ public class ParameterResolver implements ResolveParameterHook {
 
         @Override
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
-            final var applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get()
-                    .getApplicationContext();
+            final var applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);
-
-            if (argument == null) {
+            if (argument == null && !(parameterContext.parameter().isAnnotationPresent(Value.class) ||
+                    parameterContext.parameter().isAnnotationPresent(Property.class))) {
                 return applicationContext.getBean(parameterContext.parameter().getType());
             }
 
-            Optional<String> v = argument.getAnnotationMetadata().stringValue(Value.class);
-
-            if (v.isPresent()) {
-                final Optional<String> finalV = v;
-                return applicationContext.getEnvironment().getProperty(v.get(), argument)
-                        .orElseThrow(() ->
-                                new JqwikException("Unresolvable property specified to @Value: " + finalV.get())
-                        );
-            } else {
-                v = argument.getAnnotationMetadata().stringValue(Property.class, "name");
-                if (v.isEmpty()) {
-                    return applicationContext.getBean(argument, resolveQualifier(argument));
-                }
-
-                final Optional<String> finalV1 = v;
+            if (parameterContext.parameter().isAnnotationPresent(Value.class)) {
                 return applicationContext.getEnvironment()
-                        .getProperty(v.get(), argument).orElseThrow(() ->
-                                new JqwikException("Unresolvable property specified to @Property: " + finalV1.get())
+                        .getProperty(parameterContext.parameter().getAnnotation(Value.class).value()
+                                        .replaceAll("[${}]", StringUtils.EMPTY_STRING),
+                                parameterContext.parameter().getType()
+                        ).orElseThrow(() ->
+                                new JqwikException("Unresolvable property specified to @Value: " + parameterContext.parameter().getName())
                         );
             }
+
+            final var propertyName = parameterContext.parameter().getAnnotation(Property.class).name();
+            if (propertyName.isEmpty()) {
+                return applicationContext.getBean(parameterContext.parameter().getType(), resolveQualifier(argument));
+            }
+            return applicationContext.getEnvironment()
+                    .getProperty(propertyName, parameterContext.parameter().getType())
+                    .orElseThrow(() ->
+                            new JqwikException("Unresolvable property specified to @Property: " + parameterContext.parameter().getName())
+                    );
         }
     }
 }

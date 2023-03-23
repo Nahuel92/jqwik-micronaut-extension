@@ -6,11 +6,10 @@ import io.micronaut.test.support.TestPropertyProvider;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
+import org.assertj.core.api.SoftAssertions;
 
 import java.util.Map;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
 @io.micronaut.context.annotation.Property(name = "test.class.property", value = "Hello world!")
@@ -38,11 +37,13 @@ class ApplicationPropertyTest implements TestPropertyProvider {
     @Property
     @io.micronaut.context.annotation.Property(name = "test.method.property", value = "Hello method!")
     void successOnInjectingApplicationPropertiesFromDifferentInjectionPoints() {
-        assertThat(mainApplicationProperty).isEqualTo("Hello");
-        assertThat(testApplicationProperty).isEqualTo("world!");
-        assertThat(classProperty).isEqualTo("Hello world!");
-        assertThat(getTestApplicationProperty()).contains("Hello method!");
-        assertThat(dynamicProperty).isEqualTo("value");
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(mainApplicationProperty).isEqualTo("Hello");
+            softly.assertThat(testApplicationProperty).isEqualTo("world!");
+            softly.assertThat(classProperty).isEqualTo("Hello world!");
+            softly.assertThat(getTestApplicationProperty()).contains("Hello method!");
+            softly.assertThat(dynamicProperty).isEqualTo("value");
+        });
     }
 
     private Optional<String> getTestApplicationProperty() {
