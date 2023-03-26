@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Value;
 import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
+import net.jqwik.micronaut.beans.AppBean;
 import org.assertj.core.api.SoftAssertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
