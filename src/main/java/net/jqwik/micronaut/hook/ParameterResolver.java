@@ -103,10 +103,14 @@ public class ParameterResolver implements ResolveParameterHook {
             final var parameter = parameterContext.parameter();
             if (argument == null && !(parameter.isAnnotationPresent(Value.class) ||
                     parameter.isAnnotationPresent(Property.class))) {
-                return applicationContext.getBean(
-                        parameter.getType(),
-                        Qualifiers.byName(parameter.getAnnotation(Named.class).value())
-                );
+
+                if (parameter.isAnnotationPresent(Named.class)) {
+                    return applicationContext.getBean(
+                            parameter.getType(),
+                            Qualifiers.byName(parameter.getAnnotation(Named.class).value())
+                    );
+                }
+                return applicationContext.getBean(parameter.getType());
             }
 
             if (parameter.isAnnotationPresent(Value.class)) {

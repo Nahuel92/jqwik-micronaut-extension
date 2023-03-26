@@ -1,5 +1,5 @@
 package net.jqwik.micronaut.beans.named;
 
-interface MyInterface {
+public interface MyInterface {
     String test();
 }

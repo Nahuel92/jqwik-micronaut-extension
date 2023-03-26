@@ -54,9 +54,17 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                             .filter(e -> e.isAnnotationPresent(MockBean.class))
                             .toList();
 
+                    final var mockBeanFields = Arrays.stream(specInstance.getClass().getDeclaredFields())
+                            .filter(e -> e.isAnnotationPresent(MockBean.class))
+                            .toList();
+
                     for (final var injectedField : specDefinition.getInjectedFields()) {
                         final var mockBeanMethod = mockBeanMethods.stream()
                                 .filter(e -> e.getReturnType().equals(injectedField.getType()))
+                                .findFirst();
+
+                        final var mockBeanField = mockBeanFields.stream()
+                                .filter(e -> e.getType().equals(injectedField.getType()))
                                 .findFirst();
 
                         mockBeanMethod.ifPresent(e -> {
@@ -71,6 +79,17 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                                     }
                                 }
                         );
+
+                        mockBeanField.ifPresent(e -> {
+                            try {
+                                final var field = injectedField.getField();
+                                field.setAccessible(true);
+                                e.setAccessible(true);
+                                field.set(specInstance, e.get(specInstance));
+                            } catch (final IllegalAccessException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        });
                     }
                 });
     }
