@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest(environments = TestExecutionListenerOrderTest.ENVIRONMENT)
 public class TestExecutionListenerOrderTest {
-
     public static final String ENVIRONMENT = "TEST_EXECUTION_LISTENER_ORDER_TEST";
 
     @Inject
