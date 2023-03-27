@@ -6,7 +6,7 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.math.MathService;
 import org.assertj.core.api.Assertions;
 
-public class MathInheritedTest extends BaseTest {
+class MathInheritedTest extends BaseTest {
     @Inject
     private MathService mathService;
 

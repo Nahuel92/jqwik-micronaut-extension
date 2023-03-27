@@ -13,7 +13,8 @@ import static org.mockito.Mockito.*;
 @JqwikMicronautTest
 class MathFieldMockServiceTest {
     @MockBean(MathServiceImpl.class)
-    private final MathService mock = mock(MathService.class);
+    final MathService mock = mock(MathService.class);
+
     @Inject
     private MathService mathService;
 

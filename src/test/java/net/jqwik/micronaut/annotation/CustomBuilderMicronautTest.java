@@ -1,6 +1,6 @@
 package net.jqwik.micronaut.annotation;
 
-import net.jqwik.micronaut.CustomContextBuilder;
+import net.jqwik.micronaut.beans.CustomContextBuilder;
 
 import java.lang.annotation.*;
 

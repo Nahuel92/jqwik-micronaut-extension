@@ -14,6 +14,7 @@ public class TestExecutionListenerOrderTest {
 
     @Inject
     private FirstExecutionListener firstExecutionListener;
+
     @Inject
     private SecondExecutionListener secondExecutionListener;
 
