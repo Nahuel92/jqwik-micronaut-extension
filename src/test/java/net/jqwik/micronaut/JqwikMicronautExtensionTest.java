@@ -25,7 +25,7 @@ class JqwikMicronautExtensionTest {
         return mock(AppBean.class);
     }
 
-    @Property(tries = 1)
+    @Property
     void successOnRunningApplicationContextUsingProperty() {
         assertThat(application.isRunning()).isTrue();
     }
@@ -35,7 +35,7 @@ class JqwikMicronautExtensionTest {
         assertThat(application.isRunning()).isTrue();
     }
 
-    @Property(tries = 1)
+    @Property
     void successOnReplacingApplicationBeanWithMockBean() {
         // given
         final var mockedMessage = "Goodbye world!";
