@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 
 @JqwikMicronautTest
 @Requires(property = "mockito.test.enabled", defaultValue = StringUtils.FALSE, value = StringUtils.TRUE)
-class MathMockService2Test {
+class MathMockServiceTest {
     @Inject
     private MathService mathService;
 
