@@ -1,6 +1,7 @@
 package net.jqwik.micronaut;
 
 import io.micronaut.context.annotation.Value;
+import io.micronaut.core.annotation.NonNull;
 import io.micronaut.runtime.EmbeddedApplication;
 import io.micronaut.test.support.TestPropertyProvider;
 import jakarta.inject.Inject;
@@ -30,6 +31,7 @@ class ApplicationPropertyTest implements TestPropertyProvider {
     private String dynamicProperty;
 
     @Override
+    @NonNull
     public Map<String, String> getProperties() {
         return Map.ofEntries(Map.entry("dynamic.property", "value"));
     }

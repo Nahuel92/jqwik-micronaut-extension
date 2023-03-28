@@ -12,6 +12,7 @@ import io.micronaut.core.util.StringUtils;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.annotation.Nonnull;
 import net.jqwik.api.JqwikException;
 import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.LifecycleContext;
@@ -53,6 +54,7 @@ public class ParameterResolver implements ResolveParameterHook {
 
     @Override
     @NonNullApi
+    @Nonnull
     public Optional<ParameterSupplier> resolve(final ParameterResolutionContext parameterContext,
                                                final LifecycleContext lifecycleContext) {
         return Optional.of(new MicronautSupplier(parameterContext));
@@ -99,6 +101,7 @@ public class ParameterResolver implements ResolveParameterHook {
 
         @Override
         @NonNullApi
+        @Nonnull
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
             final var applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);

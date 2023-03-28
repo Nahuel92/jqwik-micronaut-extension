@@ -1,6 +1,7 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.test.annotation.MicronautTestValue;
+import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.BeforeContainerHook;
 import net.jqwik.api.lifecycle.ContainerLifecycleContext;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
@@ -9,6 +10,7 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 public class BeforeMicronautContainerHook implements BeforeContainerHook {
     @Override
+    @NonNullApi
     public void beforeContainer(final ContainerLifecycleContext context) {
         JqwikMicronautExtension.EXTENSION_STORE.get()
                 .beforeClass(
