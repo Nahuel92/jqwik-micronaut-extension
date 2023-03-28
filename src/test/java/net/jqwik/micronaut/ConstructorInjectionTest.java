@@ -16,7 +16,6 @@ class ConstructorInjectionTest {
     private final String testProperty;
     private final String classProperty;
 
-
     ConstructorInjectionTest(final AppBean appBean,
                              @Value("${test.anotherProperty}") final String testProperty,
                              @io.micronaut.context.annotation.Property(name = "class.property") final String classProperty) {
