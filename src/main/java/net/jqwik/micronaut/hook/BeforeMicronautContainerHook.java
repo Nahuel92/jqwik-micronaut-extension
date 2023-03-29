@@ -33,7 +33,8 @@ public class BeforeMicronautContainerHook implements BeforeContainerHook {
                 .findFirst()
                 .orElseGet(() ->
                         JqwikAnnotationSupport.findContainerAnnotations(testClass.getSuperclass(), JqwikMicronautTest.class)
-                                .stream().map(this::buildValueObject)
+                                .stream()
+                                .map(this::buildValueObject)
                                 .findFirst()
                                 .orElse(null)
                 );
