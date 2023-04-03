@@ -101,7 +101,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     @Override
-    protected void resolveTestProperties(final LifecycleContext context, MicronautTestValue testAnnotationValue,
+    protected void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
                                          final Map<String, Object> testProperties) {
         if (!context.optionalContainerClass().isPresent()) {
             return;
