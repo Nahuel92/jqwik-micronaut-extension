@@ -23,6 +23,7 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -103,10 +104,10 @@ public class ParameterResolver implements ResolveParameterHook {
         @NonNullApi
         @Nonnull
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
-            final var applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext();
+            final ApplicationContext applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);
             if (argument != null) {
-                final var parameter = parameterContext.parameter();
+                final Parameter parameter = parameterContext.parameter();
                 if (argument.isAnnotationPresent(Value.class) || argument.isAnnotationPresent(Property.class)) {
                     if (parameter.isAnnotationPresent(Value.class)) {
                         return applicationContext.getEnvironment()
@@ -118,7 +119,7 @@ public class ParameterResolver implements ResolveParameterHook {
                                 );
                     }
 
-                    final var propertyName = parameter.getAnnotation(Property.class).name();
+                    final String propertyName = parameter.getAnnotation(Property.class).name();
                     if (propertyName.isEmpty()) {
                         return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
                     }

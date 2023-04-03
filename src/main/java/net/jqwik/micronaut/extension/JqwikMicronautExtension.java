@@ -2,6 +2,7 @@ package net.jqwik.micronaut.extension;
 
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
+import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
@@ -12,10 +13,14 @@ import net.jqwik.api.lifecycle.PropertyLifecycleContext;
 import net.jqwik.api.lifecycle.Store;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
     public static final Store<JqwikMicronautExtension> EXTENSION_STORE = Store.getOrCreate(
@@ -42,34 +47,35 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     @Override
     protected void alignMocks(final LifecycleContext context, final Object instance) {
-        if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
+        if (specDefinition == null || !(context instanceof PropertyLifecycleContext)) {
             return;
         }
+        final PropertyLifecycleContext plc = (PropertyLifecycleContext) context;
         plc.testInstances()
                 .stream()
                 .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
                 .findAny()
                 .ifPresent(specInstance -> {
-                    final var mockBeanMethods = Arrays.stream(specInstance.getClass().getDeclaredMethods())
+                    final List<Method> mockBeanMethods = Arrays.stream(specInstance.getClass().getDeclaredMethods())
                             .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .toList();
+                            .collect(Collectors.toList());
 
-                    final var mockBeanFields = Arrays.stream(specInstance.getClass().getDeclaredFields())
+                    final List<Field> mockBeanFields = Arrays.stream(specInstance.getClass().getDeclaredFields())
                             .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .toList();
+                            .collect(Collectors.toList());
 
-                    for (final var injectedField : specDefinition.getInjectedFields()) {
-                        final var mockBeanMethod = mockBeanMethods.stream()
+                    for (final FieldInjectionPoint<?, ?> injectedField : specDefinition.getInjectedFields()) {
+                        final Optional<Method> mockBeanMethod = mockBeanMethods.stream()
                                 .filter(e -> e.getReturnType().equals(injectedField.getType()))
                                 .findFirst();
 
-                        final var mockBeanField = mockBeanFields.stream()
+                        final Optional<Field> mockBeanField = mockBeanFields.stream()
                                 .filter(e -> e.getType().equals(injectedField.getType()))
                                 .findFirst();
 
                         mockBeanMethod.ifPresent(e -> {
-                                    try {
-                                        final var field = injectedField.getField();
+                            try {
+                                final Field field = injectedField.getField();
                                         field.setAccessible(true);
                                         e.setAccessible(true);
                                         final Object result = e.invoke(specInstance);
@@ -82,7 +88,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
                         mockBeanField.ifPresent(e -> {
                             try {
-                                final var field = injectedField.getField();
+                                final Field field = injectedField.getField();
                                 field.setAccessible(true);
                                 e.setAccessible(true);
                                 field.set(specInstance, e.get(specInstance));
@@ -95,15 +101,16 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     @Override
-    protected void resolveTestProperties(LifecycleContext context, MicronautTestValue testAnnotationValue, Map<String, Object> testProperties) {
-        if (context.optionalContainerClass().isEmpty()) {
+    protected void resolveTestProperties(final LifecycleContext context, MicronautTestValue testAnnotationValue,
+                                         final Map<String, Object> testProperties) {
+        if (!context.optionalContainerClass().isPresent()) {
             return;
         }
         final Class<?> testContainerClass = context.optionalContainerClass().get();
         final Object testClassInstance = context.newInstance(testContainerClass);
 
-        if (testClassInstance instanceof TestPropertyProvider propertyProvider) {
-            final Map<String, String> dynamicPropertiesToAdd = propertyProvider.getProperties();
+        if (testClassInstance instanceof TestPropertyProvider) {
+            final Map<String, String> dynamicPropertiesToAdd = ((TestPropertyProvider) testClassInstance).getProperties();
             testProperties.putAll(dynamicPropertiesToAdd);
         }
     }
