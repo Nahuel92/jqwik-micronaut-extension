@@ -9,7 +9,8 @@ import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
-import org.assertj.core.api.Assertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // FIXME: This test fails to pass
 @JqwikMicronautTest
@@ -20,16 +21,16 @@ class TransactionalTest {
 
     @BeforeProperty
     void setup() {
-        Assertions.assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
+        assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
     @AfterProperty
     void cleanup() {
-        Assertions.assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
+        assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
     @Property
     void testSpringTransactionListenerMissing() {
-        Assertions.assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isTrue();
+        assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isTrue();
     }
 }

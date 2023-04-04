@@ -9,7 +9,6 @@ import net.jqwik.micronaut.beans.SimpleService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// FIXME: This test fails to pass
 @JqwikMicronautTest
 @Requires(property = "mockito.test.enabled", defaultValue = StringUtils.FALSE, value = StringUtils.TRUE)
 class Simple2Test extends SimpleBaseTest {
