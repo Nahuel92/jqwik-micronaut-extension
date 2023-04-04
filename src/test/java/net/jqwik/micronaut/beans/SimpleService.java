@@ -6,7 +6,7 @@ import jakarta.inject.Singleton;
 public class SimpleService {
     private final SimpleWorker simpleWorker;
 
-    SimpleService(final SimpleWorker simpleWorker) {
+    public SimpleService(final SimpleWorker simpleWorker) {
         this.simpleWorker = simpleWorker;
     }
 
