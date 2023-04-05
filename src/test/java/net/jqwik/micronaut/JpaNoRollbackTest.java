@@ -4,15 +4,16 @@ import io.micronaut.transaction.SynchronousTransactionManager;
 import io.micronaut.transaction.TransactionStatus;
 import io.micronaut.transaction.support.DefaultTransactionDefinition;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
 import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
+
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
