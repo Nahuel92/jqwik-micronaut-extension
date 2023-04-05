@@ -4,6 +4,7 @@ import net.jqwik.api.lifecycle.PropagationMode;
 import net.jqwik.api.lifecycle.RegistrarHook;
 import net.jqwik.micronaut.hook.AroundPropertyMicronaut;
 import net.jqwik.micronaut.hook.BeforeMicronautContainerHook;
+import net.jqwik.micronaut.hook.DisabledHook;
 import net.jqwik.micronaut.hook.ParameterResolver;
 import org.apiguardian.api.API;
 
@@ -14,5 +15,6 @@ public class JqwikMicronautRegistar implements RegistrarHook {
         registrar.register(BeforeMicronautContainerHook.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AroundPropertyMicronaut.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(ParameterResolver.class, PropagationMode.ALL_DESCENDANTS);
+        registrar.register(DisabledHook.class, PropagationMode.ALL_DESCENDANTS);
     }
 }

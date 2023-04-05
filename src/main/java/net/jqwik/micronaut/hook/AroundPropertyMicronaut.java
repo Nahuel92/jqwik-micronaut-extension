@@ -28,4 +28,12 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                 );
         return property.execute();
     }
+
+    @Override
+    public int aroundPropertyProximity() {
+        /* Property lifecycle methods (@BeforeProperty, @AfterProperty) use -10.
+           Smaller numbers means "further away" from actual invocation of property method.
+           -20 is therefore around the lifecycle methods. */
+        return -20;
+    }
 }
