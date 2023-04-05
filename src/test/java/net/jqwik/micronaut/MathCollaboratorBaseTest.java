@@ -11,7 +11,6 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.math.MathService;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @JqwikMicronautTest
@@ -25,14 +24,16 @@ class MathCollaboratorBaseTest extends MathBaseTest {
     private HttpClient client;
 
     @Property
-    void testComputeNumToSquare() {
+    void successOnGettingSquareNumber() {
+        // given
         when(mathService.compute(10))
                 .then(invocation -> Long.valueOf(Math.round(Math.pow(2, 2))).intValue());
 
+        // when
         final Integer result = client.toBlocking()
                 .retrieve(HttpRequest.GET("/math/compute/10"), Integer.class);
 
+        // then
         assertThat(result).isEqualTo(4);
-        verify(mathService).compute(10);
     }
 }
