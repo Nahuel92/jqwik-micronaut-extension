@@ -13,7 +13,7 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // FIXME: This test fails to pass
-@JqwikMicronautTest
+@JqwikMicronautTest(transactional = true)
 @DbProperties
 class TransactionalTest {
     @Inject
