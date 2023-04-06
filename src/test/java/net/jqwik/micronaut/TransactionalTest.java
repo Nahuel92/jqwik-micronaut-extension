@@ -4,9 +4,9 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.transaction.support.TransactionSynchronizationManager;
 import io.micronaut.transaction.test.DefaultTestTransactionExecutionListener;
 import jakarta.inject.Inject;
-import net.jqwik.api.Example;
-import net.jqwik.api.lifecycle.AfterExample;
-import net.jqwik.api.lifecycle.BeforeExample;
+import net.jqwik.api.Property;
+import net.jqwik.api.lifecycle.AfterProperty;
+import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
@@ -18,17 +18,17 @@ class TransactionalTest {
     @Inject
     private ApplicationContext applicationContext;
 
-    @BeforeExample
+    @BeforeProperty
     void setup() {
         assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
-    @AfterExample
+    @AfterProperty
     void cleanup() {
         assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
-    @Example
+    @Property(tries = 1)
     void testSpringTransactionListenerMissing() {
         assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isTrue();
     }

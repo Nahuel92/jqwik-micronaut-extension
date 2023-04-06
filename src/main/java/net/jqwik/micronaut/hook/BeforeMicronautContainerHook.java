@@ -19,8 +19,7 @@ public class BeforeMicronautContainerHook implements BeforeContainerHook {
                         context.optionalContainerClass().orElse(null),
                         buildMicronautTestValue(context.optionalContainerClass().orElse(null))
                 );
-        final TestContext testContext = buildContext(context);
-        JqwikMicronautExtension.EXTENSION_STORE.get().beforeTestClass(testContext);
+        JqwikMicronautExtension.EXTENSION_STORE.get().beforeTestClass(buildContext(context));
     }
 
     /**
