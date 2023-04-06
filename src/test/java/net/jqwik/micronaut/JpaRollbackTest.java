@@ -1,7 +1,7 @@
 package net.jqwik.micronaut;
 
 import jakarta.inject.Inject;
-import net.jqwik.api.Property;
+import net.jqwik.api.Example;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -19,7 +19,7 @@ class JpaRollbackTest {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Property
+    @Example
     void testPersistOne() {
         final Book book = new Book();
         book.setTitle("The Stand");
@@ -31,7 +31,7 @@ class JpaRollbackTest {
         assertThat(entityManager.createQuery(query).getResultList().size()).isEqualTo(1);
     }
 
-    @Property
+    @Example
     void testPersistTwo() {
         final Book book = new Book();
         book.setTitle("The Shining");

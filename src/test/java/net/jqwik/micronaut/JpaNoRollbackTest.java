@@ -4,8 +4,8 @@ import io.micronaut.transaction.SynchronousTransactionManager;
 import io.micronaut.transaction.TransactionStatus;
 import io.micronaut.transaction.support.DefaultTransactionDefinition;
 import jakarta.inject.Inject;
-import net.jqwik.api.Property;
-import net.jqwik.api.lifecycle.AfterProperty;
+import net.jqwik.api.Example;
+import net.jqwik.api.lifecycle.AfterContainer;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -17,7 +17,6 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// FIXME: These tests fail to pass (NPE thrown for some JPA stuff)
 @JqwikMicronautTest(rollback = false)
 @DbProperties
 class JpaNoRollbackTest {
@@ -25,19 +24,21 @@ class JpaNoRollbackTest {
     private EntityManager entityManager;
 
     @Inject
+    @SuppressWarnings("rawtypes")
     private SynchronousTransactionManager transactionManager;
 
-    @AfterProperty
-    void cleanup() {
-        final TransactionStatus<Book> tx = transactionManager.getTransaction(new DefaultTransactionDefinition());
-        final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+    @AfterContainer
+    @SuppressWarnings("unchecked")
+    static void cleanup(JpaNoRollbackTest subject) {
+        final TransactionStatus<Book> tx = subject.transactionManager.getTransaction(new DefaultTransactionDefinition());
+        final CriteriaBuilder criteriaBuilder = subject.entityManager.getCriteriaBuilder();
         final CriteriaDelete<Book> delete = criteriaBuilder.createCriteriaDelete(Book.class);
         delete.from(Book.class);
-        entityManager.createQuery(delete).executeUpdate();
-        transactionManager.commit(tx);
+        subject.entityManager.createQuery(delete).executeUpdate();
+        subject.transactionManager.commit(tx);
     }
 
-    @Property
+    @Example
     void testPersistOne() {
         final Book book = new Book();
         book.setTitle("The Stand");
@@ -49,7 +50,7 @@ class JpaNoRollbackTest {
         assertThat(entityManager.createQuery(query).getResultList().size()).isEqualTo(1);
     }
 
-    @Property
+    @Example
     void testPersistTwo() {
         final Book book = new Book();
         book.setTitle("The Shining");

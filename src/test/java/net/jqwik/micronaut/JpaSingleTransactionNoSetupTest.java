@@ -1,8 +1,8 @@
 package net.jqwik.micronaut;
 
 import jakarta.inject.Inject;
-import net.jqwik.api.Property;
-import net.jqwik.api.lifecycle.AfterProperty;
+import net.jqwik.api.Example;
+import net.jqwik.api.lifecycle.AfterContainer;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -18,15 +18,15 @@ class JpaSingleTransactionNoSetupTest {
     @Inject
     private EntityManager entityManager;
 
-    @AfterProperty
-    void tearDown() {
+    @AfterContainer
+    static void tearDown(final JpaSingleTransactionNoSetupTest subject) {
         // check test was rolled back
-        final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
+        final CriteriaQuery<Book> query = subject.entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);
-        assertThat(entityManager.createQuery(query).getResultList()).isEmpty();
+        assertThat(subject.entityManager.createQuery(query).getResultList()).isEmpty();
     }
 
-    @Property
+    @Example
     void testPersistOne() {
         final Book book = new Book();
         book.setTitle("The Stand");
@@ -37,7 +37,7 @@ class JpaSingleTransactionNoSetupTest {
         assertThat(entityManager.createQuery(query).getResultList().size()).isEqualTo(1);
     }
 
-    @Property
+    @Example
     void testPersistTwo() {
         final Book book = new Book();
         book.setTitle("The Shining");

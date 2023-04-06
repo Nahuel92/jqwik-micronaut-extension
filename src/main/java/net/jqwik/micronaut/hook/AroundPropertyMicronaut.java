@@ -30,10 +30,9 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                 );
         final var testContext = JqwikMicronautExtension.EXTENSION_STORE.get().testContext(context);
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeSetupTest(testContext);
-        JqwikMicronautExtension.EXTENSION_STORE.get().beforeCleanupTest(testContext);
 
-        final var execute = property.execute();
-        final var test = new TestMethodInvocationContext<>() {
+        final var testMethodInvocationContext = new TestMethodInvocationContext<>() {
+
             @Override
             public TestContext getTestContext() {
                 return testContext;
@@ -41,11 +40,17 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
 
             @Override
             public Object proceed() {
-                return execute;
+                return property.execute();
             }
         };
-        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(test);
-        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(test);
+
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(testMethodInvocationContext);
+        JqwikMicronautExtension.EXTENSION_STORE.get().afterSetupTest(testContext);
+
+        final var execute = property.execute();
+
+        JqwikMicronautExtension.EXTENSION_STORE.get().beforeCleanupTest(testContext);
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(testMethodInvocationContext);
         JqwikMicronautExtension.EXTENSION_STORE.get().afterCleanupTest(testContext);
         return execute;
     }
