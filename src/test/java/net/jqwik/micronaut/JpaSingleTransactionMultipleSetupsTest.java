@@ -2,9 +2,9 @@ package net.jqwik.micronaut;
 
 import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
-import net.jqwik.api.Example;
-import net.jqwik.api.lifecycle.AfterExample;
-import net.jqwik.api.lifecycle.BeforeExample;
+import net.jqwik.api.Property;
+import net.jqwik.api.lifecycle.AfterProperty;
+import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -20,21 +20,21 @@ class JpaSingleTransactionMultipleSetupsTest {
     @Inject
     private EntityManager entityManager;
 
-    @BeforeExample
+    @BeforeProperty
     void setUpOne() {
         final Book book = new Book();
         book.setTitle("The Stand");
         entityManager.persist(book);
     }
 
-    @BeforeExample
+    @BeforeProperty
     void setUpTwo() {
         final Book book = new Book();
         book.setTitle("The Shining");
         entityManager.persist(book);
     }
 
-    @AfterExample
+    @AfterProperty
     void tearDown() {
         // check setups were rolled back
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
@@ -42,14 +42,14 @@ class JpaSingleTransactionMultipleSetupsTest {
         assertThat(entityManager.createQuery(query).getResultList()).isEmpty();
     }
 
-    @Example
+    @Property(tries = 1)
     void testPersistOne() {
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);
         assertThat(entityManager.createQuery(query).getResultList().size()).isEqualTo(2);
     }
 
-    @Example
+    @Property(tries = 1)
     void testPersistTwo() {
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);

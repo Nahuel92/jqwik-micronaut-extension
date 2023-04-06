@@ -1,10 +1,11 @@
 package net.jqwik.micronaut;
 
+import io.micronaut.test.annotation.TransactionMode;
 import io.micronaut.transaction.SynchronousTransactionManager;
 import io.micronaut.transaction.TransactionStatus;
 import io.micronaut.transaction.support.DefaultTransactionDefinition;
 import jakarta.inject.Inject;
-import net.jqwik.api.Example;
+import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.AfterContainer;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
@@ -17,7 +18,7 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@JqwikMicronautTest(rollback = false)
+@JqwikMicronautTest(rollback = false, transactionMode = TransactionMode.SINGLE_TRANSACTION)
 @DbProperties
 class JpaNoRollbackTest {
     @Inject
@@ -38,7 +39,7 @@ class JpaNoRollbackTest {
         subject.transactionManager.commit(tx);
     }
 
-    @Example
+    @Property(tries = 1)
     void testPersistOne() {
         final Book book = new Book();
         book.setTitle("The Stand");
@@ -50,7 +51,7 @@ class JpaNoRollbackTest {
         assertThat(entityManager.createQuery(query).getResultList().size()).isEqualTo(1);
     }
 
-    @Example
+    @Property(tries = 1)
     void testPersistTwo() {
         final Book book = new Book();
         book.setTitle("The Shining");

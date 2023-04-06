@@ -1,5 +1,6 @@
 package net.jqwik.micronaut;
 
+import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
 import net.jqwik.micronaut.annotation.DbProperties;
@@ -12,7 +13,7 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@JqwikMicronautTest
+@JqwikMicronautTest(transactionMode = TransactionMode.SINGLE_TRANSACTION)
 @DbProperties
 class JpaRollbackTest {
     @Inject
