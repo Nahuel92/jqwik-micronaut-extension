@@ -4,6 +4,7 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
+import io.micronaut.test.context.TestContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
 import net.jqwik.api.lifecycle.LifecycleContext;
@@ -23,6 +24,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             Lifespan.RUN,
             JqwikMicronautExtension::new
     );
+    public static TestContext testContext;
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -107,5 +109,18 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             final Map<String, String> dynamicPropertiesToAdd = propertyProvider.getProperties();
             testProperties.putAll(dynamicPropertiesToAdd);
         }
+    }
+
+    public TestContext testContext(final PropertyLifecycleContext context) {
+        if (testContext != null) {
+            return testContext;
+        }
+        return new TestContext(
+                JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext(),
+                context.containerClass(),
+                context.targetMethod(),
+                context.testInstance(),
+                null
+        );
     }
 }

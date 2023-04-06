@@ -1,6 +1,8 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.context.annotation.Property;
+import io.micronaut.test.context.TestContext;
+import io.micronaut.test.context.TestMethodInvocationContext;
 import jakarta.annotation.Nonnull;
 import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.AroundPropertyHook;
@@ -15,7 +17,7 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
     @NonNullApi
     @Nonnull
     public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
-                                                  final PropertyExecutor property) {
+                                                  final PropertyExecutor property) throws Throwable {
         JqwikMicronautExtension.EXTENSION_STORE.get()
                 .beforeEach(
                         context,
@@ -26,7 +28,26 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                 Property.class
                         )
                 );
-        return property.execute();
+        final var testContext = JqwikMicronautExtension.EXTENSION_STORE.get().testContext(context);
+        JqwikMicronautExtension.EXTENSION_STORE.get().beforeSetupTest(testContext);
+        JqwikMicronautExtension.EXTENSION_STORE.get().beforeCleanupTest(testContext);
+
+        final var execute = property.execute();
+        final var test = new TestMethodInvocationContext<>() {
+            @Override
+            public TestContext getTestContext() {
+                return testContext;
+            }
+
+            @Override
+            public Object proceed() {
+                return execute;
+            }
+        };
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(test);
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(test);
+        JqwikMicronautExtension.EXTENSION_STORE.get().afterCleanupTest(testContext);
+        return execute;
     }
 
     @Override
