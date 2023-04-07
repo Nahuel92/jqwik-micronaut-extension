@@ -10,7 +10,7 @@ class PropertySourceTest {
     @io.micronaut.context.annotation.Property(name = "foo.bar")
     private String val;
 
-    @Property
+    @Property(tries = 1)
     void testPropertySource() {
         assertThat(val).isEqualTo("foo");
     }

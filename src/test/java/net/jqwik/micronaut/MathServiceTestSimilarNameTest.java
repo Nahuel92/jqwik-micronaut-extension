@@ -19,7 +19,7 @@ public class MathServiceTestSimilarNameTest {
     @Inject
     private MathService mathService;
 
-    @Property
+    @Property(tries = 1)
     void testThatSimilarlyNamedTestSuitesDontLeakMocks() {
         int num = 10;
         when(mathService.compute(num)).then(invocation -> num * 2); // non mock impl is * 4

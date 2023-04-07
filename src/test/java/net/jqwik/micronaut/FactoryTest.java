@@ -18,7 +18,7 @@ class FactoryTest {
         return new FactoryBean();
     }
 
-    @Property
+    @Property(tries = 1)
     void testFactoryMethod() {
         assertThat(factoryBean).isNotNull();
     }

@@ -12,7 +12,7 @@ class MathServiceTest {
     @Inject
     private MathService mathService;
 
-    @Property
+    @Property(tries = 1)
     void testComputeNumToSquare(@ForAll("10") final Integer num) {
         final Integer result = mathService.compute(num);
         assertThat(result).isEqualTo(num * 4);

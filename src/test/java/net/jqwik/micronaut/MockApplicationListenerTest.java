@@ -16,7 +16,7 @@ public class MockApplicationListenerTest {
     @Inject
     private BeanContext beanContext;
 
-    @Property
+    @Property(tries = 1)
     public void test() {
         MyApplicationListener myApplicationListener = beanContext.getBean(MyApplicationListener.class);
         assertThat(myApplicationListener.getDescription()).isEqualTo("I'm the mock bean");

@@ -36,7 +36,7 @@ class ApplicationPropertyTest implements TestPropertyProvider {
         return Map.ofEntries(Map.entry("dynamic.property", "value"));
     }
 
-    @Property
+    @Property(tries = 1)
     @io.micronaut.context.annotation.Property(name = "test.method.property", value = "Hello method!")
     void successOnInjectingApplicationPropertiesFromDifferentInjectionPoints() {
         SoftAssertions.assertSoftly(softly -> {

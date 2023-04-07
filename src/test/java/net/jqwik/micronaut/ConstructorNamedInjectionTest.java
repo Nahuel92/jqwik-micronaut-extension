@@ -15,7 +15,7 @@ class ConstructorNamedInjectionTest {
         this.myInterface = myInterface;
     }
 
-    @Property
+    @Property(tries = 1)
     void testConstructorInjected() {
         assertThat(myInterface.test()).isEqualTo("B");
     }

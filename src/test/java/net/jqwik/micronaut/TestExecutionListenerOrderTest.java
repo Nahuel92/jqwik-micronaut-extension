@@ -18,7 +18,7 @@ public class TestExecutionListenerOrderTest {
     @Inject
     private SecondExecutionListener secondExecutionListener;
 
-    @Property
+    @Property(tries = 1)
     void test() {
         assertThat(firstExecutionListener).isNotNull();
         assertThat(secondExecutionListener).isNotNull();

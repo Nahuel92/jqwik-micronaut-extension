@@ -23,7 +23,7 @@ class MathCollaboratorBaseTest extends MathBaseTest {
     @Client("/")
     private HttpClient client;
 
-    @Property
+    @Property(tries = 1)
     void successOnGettingSquareNumber() {
         // given
         when(mathService.compute(10))

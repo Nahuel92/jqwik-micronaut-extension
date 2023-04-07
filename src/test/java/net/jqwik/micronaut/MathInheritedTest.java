@@ -10,7 +10,7 @@ class MathInheritedTest extends BaseTest {
     @Inject
     private MathService mathService;
 
-    @Property
+    @Property(tries = 1)
     void testComputeNumToSquare() {
         final Integer result = mathService.compute(2);
         Assertions.assertThat(result).isEqualTo(8);

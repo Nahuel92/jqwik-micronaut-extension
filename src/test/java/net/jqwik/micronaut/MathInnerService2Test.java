@@ -20,7 +20,7 @@ public class MathInnerService2Test {
     /**
      * Tests that it is possible to have 2 mock beans
      */
-    @Property
+    @Property(tries = 1)
     void testInnerMockAgain() {
         final int result = mathService.compute(10);
 
