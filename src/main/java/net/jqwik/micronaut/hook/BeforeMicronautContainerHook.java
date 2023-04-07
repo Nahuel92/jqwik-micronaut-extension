@@ -13,13 +13,13 @@ public class BeforeMicronautContainerHook implements BeforeContainerHook {
     @Override
     @NonNullApi
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
-        JqwikMicronautExtension.EXTENSION_STORE.get()
+        JqwikMicronautExtension.STORE.get()
                 .beforeClass(
                         context,
                         context.optionalContainerClass().orElse(null),
                         buildMicronautTestValue(context.optionalContainerClass().orElse(null))
                 );
-        JqwikMicronautExtension.EXTENSION_STORE.get().beforeTestClass(buildContext(context));
+        JqwikMicronautExtension.STORE.get().beforeTestClass(buildContext(context));
     }
 
     /**
@@ -60,7 +60,7 @@ public class BeforeMicronautContainerHook implements BeforeContainerHook {
 
     private TestContext buildContext(final ContainerLifecycleContext context) {
         return new TestContext(
-                JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext(),
+                JqwikMicronautExtension.STORE.get().getApplicationContext(),
                 context.optionalContainerClass().orElse(null),
                 context.optionalElement().orElse(null),
                 null,

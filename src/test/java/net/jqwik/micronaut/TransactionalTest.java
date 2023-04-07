@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
 @DbProperties
+// FIXME: flaky test
 class TransactionalTest {
     @Inject
     private ApplicationContext applicationContext;

@@ -11,15 +11,19 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 import java.util.List;
 
 public class TestInterceptor implements AroundTryHook {
+    private final JqwikMicronautExtension extension;
+
+    TestInterceptor() {
+        this.extension = JqwikMicronautExtension.STORE.get();
+    }
+
     @Override
     @NonNullApi
     @Nonnull
     public TryExecutionResult aroundTry(final TryLifecycleContext context, final TryExecutor aTry,
                                         final List<Object> parameters) throws Throwable {
-        final var testContext = JqwikMicronautExtension.EXTENSION_STORE.get().testContext(context);
-        JqwikMicronautExtension.EXTENSION_STORE.get().interceptTest(
-                JqwikMicronautExtension.EXTENSION_STORE.get().getTestMethodInvocationContext(testContext)
-        );
+        final var testContext = extension.testContext(context);
+        extension.interceptTest(extension.getTestMethodInvocationContext(testContext));
         return aTry.execute(parameters);
     }
 

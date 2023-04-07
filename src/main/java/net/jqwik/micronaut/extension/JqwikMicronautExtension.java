@@ -17,12 +17,12 @@ import java.util.List;
 import java.util.Map;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
-    public static final Store<JqwikMicronautExtension> EXTENSION_STORE = Store.getOrCreate(
+    public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
             JqwikMicronautExtension.class,
             Lifespan.RUN,
             JqwikMicronautExtension::new
     );
-    public static TestContext testContext;
+    private static TestContext testContext;
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -113,26 +113,28 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         if (testContext != null) {
             return testContext;
         }
-        return new TestContext(
-                JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext(),
+        testContext = new TestContext(
+                applicationContext,
                 context.containerClass(),
                 context.targetMethod(),
                 context.testInstance(),
                 null
         );
+        return testContext;
     }
 
     public TestContext testContext(final TryLifecycleContext context) {
         if (testContext != null) {
             return testContext;
         }
-        return new TestContext(
-                JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext(),
+        testContext = new TestContext(
+                applicationContext,
                 context.containerClass(),
                 context.targetMethod(),
                 context.testInstance(),
                 null
         );
+        return testContext;
     }
 
     public TestMethodInvocationContext<Object> getTestMethodInvocationContext(final TestContext testContext) {
