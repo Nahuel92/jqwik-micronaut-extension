@@ -2,6 +2,7 @@ package net.jqwik.micronaut.hook;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.context.TestContext;
+import io.micronaut.test.context.TestMethodInvocationContext;
 import jakarta.annotation.Nonnull;
 import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.AroundPropertyHook;
@@ -44,7 +45,7 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                      final TestContext testContext) throws Throwable {
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeSetupTest(testContext);
         // Enabling this code will cause test method to run more than once
-        /*JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(new TestMethodInvocationContext<>() {
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(new TestMethodInvocationContext<>() {
             @Override
             public TestContext getTestContext() {
                 return testContext;
@@ -52,9 +53,9 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
 
             @Override
             public Object proceed() {
-                return property.execute();
+                return null;
             }
-        });*/
+        });
         JqwikMicronautExtension.EXTENSION_STORE.get().afterSetupTest(testContext);
     }
 
@@ -62,7 +63,7 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                     final TestContext testContext) throws Throwable {
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeCleanupTest(testContext);
         // Enabling this code will cause test method to run more than once
-        /*JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(new TestMethodInvocationContext<Object>() {
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(new TestMethodInvocationContext<Object>() {
             @Override
             public TestContext getTestContext() {
                 return testContext;
@@ -70,9 +71,9 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
 
             @Override
             public Object proceed() {
-                return property.execute();
+                return null;
             }
-        });*/
+        });
         JqwikMicronautExtension.EXTENSION_STORE.get().afterCleanupTest(testContext);
     }
 
