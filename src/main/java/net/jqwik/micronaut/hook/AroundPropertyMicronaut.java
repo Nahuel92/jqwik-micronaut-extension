@@ -2,7 +2,6 @@ package net.jqwik.micronaut.hook;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.context.TestContext;
-import io.micronaut.test.context.TestMethodInvocationContext;
 import jakarta.annotation.Nonnull;
 import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.AroundPropertyHook;
@@ -20,9 +19,9 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                                   final PropertyExecutor property) throws Throwable {
         final var testContext = JqwikMicronautExtension.EXTENSION_STORE.get().testContext(context);
         beforeEach(context, testContext);
-        interceptBeforeEach(property, testContext);
+        interceptBeforeEach(testContext);
         final var execute = property.execute();
-        interceptAfterEach(property, testContext);
+        interceptAfterEach(testContext);
         afterEach(context, testContext);
         return execute;
     }
@@ -41,39 +40,19 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeTestMethod(testContext);
     }
 
-    private void interceptBeforeEach(final PropertyExecutor property,
-                                     final TestContext testContext) throws Throwable {
+    private void interceptBeforeEach(final TestContext testContext) throws Throwable {
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeSetupTest(testContext);
-        // Enabling this code will cause test method to run more than once
-        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(new TestMethodInvocationContext<>() {
-            @Override
-            public TestContext getTestContext() {
-                return testContext;
-            }
-
-            @Override
-            public Object proceed() {
-                return null;
-            }
-        });
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptBeforeEach(
+                JqwikMicronautExtension.EXTENSION_STORE.get().getTestMethodInvocationContext(testContext)
+        );
         JqwikMicronautExtension.EXTENSION_STORE.get().afterSetupTest(testContext);
     }
 
-    private void interceptAfterEach(final PropertyExecutor property,
-                                    final TestContext testContext) throws Throwable {
+    private void interceptAfterEach(final TestContext testContext) throws Throwable {
         JqwikMicronautExtension.EXTENSION_STORE.get().beforeCleanupTest(testContext);
-        // Enabling this code will cause test method to run more than once
-        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(new TestMethodInvocationContext<Object>() {
-            @Override
-            public TestContext getTestContext() {
-                return testContext;
-            }
-
-            @Override
-            public Object proceed() {
-                return null;
-            }
-        });
+        JqwikMicronautExtension.EXTENSION_STORE.get().interceptAfterEach(
+                JqwikMicronautExtension.EXTENSION_STORE.get().getTestMethodInvocationContext(testContext)
+        );
         JqwikMicronautExtension.EXTENSION_STORE.get().afterCleanupTest(testContext);
     }
 

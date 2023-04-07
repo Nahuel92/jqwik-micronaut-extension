@@ -5,12 +5,10 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.context.TestContext;
+import io.micronaut.test.context.TestMethodInvocationContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-import net.jqwik.api.lifecycle.LifecycleContext;
-import net.jqwik.api.lifecycle.Lifespan;
-import net.jqwik.api.lifecycle.PropertyLifecycleContext;
-import net.jqwik.api.lifecycle.Store;
+import net.jqwik.api.lifecycle.*;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -122,5 +120,32 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 context.testInstance(),
                 null
         );
+    }
+
+    public TestContext testContext(final TryLifecycleContext context) {
+        if (testContext != null) {
+            return testContext;
+        }
+        return new TestContext(
+                JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext(),
+                context.containerClass(),
+                context.targetMethod(),
+                context.testInstance(),
+                null
+        );
+    }
+
+    public TestMethodInvocationContext<Object> getTestMethodInvocationContext(final TestContext testContext) {
+        return new TestMethodInvocationContext<>() {
+            @Override
+            public TestContext getTestContext() {
+                return testContext;
+            }
+
+            @Override
+            public Object proceed() {
+                return null;
+            }
+        };
     }
 }
