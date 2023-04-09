@@ -45,4 +45,3 @@ class JqwikMicronautExtensionTest {
         assertThat(appBean.method()).isEqualTo(mockedMessage);
     }
 }
-

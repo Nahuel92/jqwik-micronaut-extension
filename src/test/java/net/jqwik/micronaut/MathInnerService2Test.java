@@ -10,7 +10,7 @@ import net.jqwik.micronaut.beans.math.MathServiceImpl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
-public class MathInnerService2Test {
+class MathInnerService2Test {
     @Inject
     private MathService mathService;
 

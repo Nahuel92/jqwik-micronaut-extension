@@ -20,4 +20,3 @@ class ConstructorNamedInjectionTest {
         assertThat(myInterface.test()).isEqualTo("B");
     }
 }
-

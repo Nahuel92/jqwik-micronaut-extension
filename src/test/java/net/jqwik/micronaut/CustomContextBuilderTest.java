@@ -15,4 +15,3 @@ class CustomContextBuilderTest {
         assertThat(val).isEqualTo("value");
     }
 }
-

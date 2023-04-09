@@ -12,7 +12,7 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
-public class MockApplicationListenerTest {
+class MockApplicationListenerTest {
     @Inject
     private BeanContext beanContext;
 
@@ -32,7 +32,7 @@ public class MockApplicationListenerTest {
 class MyApplicationListener implements ApplicationEventListener<StartupEvent> {
     private final String description;
 
-    public MyApplicationListener(String description) {
+    public MyApplicationListener(final String description) {
         this.description = description;
     }
 
