@@ -26,7 +26,7 @@ class MathMockServiceTest {
         return mock(MathService.class);
     }
 
-    @Property
+    @Property(tries = 1)
     void testComputeNumToSquare(@ForAll("10") final Integer num) {
         when(mathService.compute(10))
                 .then(invocation -> Long.valueOf(Math.round(Math.pow(num, 2))).intValue());

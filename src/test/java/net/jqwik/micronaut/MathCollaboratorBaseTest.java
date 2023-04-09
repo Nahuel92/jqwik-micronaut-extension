@@ -23,17 +23,17 @@ class MathCollaboratorBaseTest extends MathBaseTest {
     @Client("/")
     private HttpClient client;
 
-    @Property
+    @Property(tries = 1)
     void successOnGettingSquareNumber() {
         // given
         when(mathService.compute(10))
                 .then(invocation -> Long.valueOf(Math.round(Math.pow(2, 2))).intValue());
 
         // when
-        final Integer result = client.toBlocking().retrieve(HttpRequest.GET("/math/compute/10"), Integer.class);
+        final Integer result = client.toBlocking()
+                .retrieve(HttpRequest.GET("/math/compute/10"), Integer.class);
 
         // then
         assertThat(result).isEqualTo(4);
     }
 }
-

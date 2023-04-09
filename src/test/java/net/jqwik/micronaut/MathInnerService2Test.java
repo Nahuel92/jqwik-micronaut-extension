@@ -10,7 +10,7 @@ import net.jqwik.micronaut.beans.math.MathServiceImpl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JqwikMicronautTest
-public class MathInnerService2Test {
+class MathInnerService2Test {
     @Inject
     private MathService mathService;
 
@@ -20,7 +20,7 @@ public class MathInnerService2Test {
     /**
      * Tests that it is possible to have 2 mock beans
      */
-    @Property
+    @Property(tries = 1)
     void testInnerMockAgain() {
         final int result = mathService.compute(10);
 

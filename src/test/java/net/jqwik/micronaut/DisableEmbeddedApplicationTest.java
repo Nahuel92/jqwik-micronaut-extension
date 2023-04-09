@@ -12,12 +12,12 @@ class DisableEmbeddedApplicationTest {
     @Inject
     private EmbeddedApplication<?> embeddedApplication;
 
-    @Property
+    @Property(tries = 1)
     void embeddedApplicationIsNotStartedWhenContextIsStarted() {
         assertThat(embeddedApplication.isRunning()).isFalse();
     }
 
-    @Property
+    @Property(tries = 1)
     void embeddedApplicationIsNotStartedWhenContextIsRebuilt() {
         assertThat(embeddedApplication.isRunning()).isFalse();
     }

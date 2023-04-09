@@ -1,6 +1,7 @@
 package net.jqwik.micronaut.hook;
 
 import io.micronaut.test.annotation.MicronautTestValue;
+import io.micronaut.test.context.TestContext;
 import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.BeforeContainerHook;
 import net.jqwik.api.lifecycle.ContainerLifecycleContext;
@@ -11,13 +12,14 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 public class BeforeMicronautContainerHook implements BeforeContainerHook {
     @Override
     @NonNullApi
-    public void beforeContainer(final ContainerLifecycleContext context) {
-        JqwikMicronautExtension.EXTENSION_STORE.get()
+    public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
+        JqwikMicronautExtension.STORE.get()
                 .beforeClass(
                         context,
                         context.optionalContainerClass().orElse(null),
                         buildMicronautTestValue(context.optionalContainerClass().orElse(null))
                 );
+        JqwikMicronautExtension.STORE.get().beforeTestClass(buildContext(context));
     }
 
     /**
@@ -53,6 +55,16 @@ public class BeforeMicronautContainerHook implements BeforeContainerHook {
                 micronautTest.transactionMode(),
                 micronautTest.startApplication(),
                 micronautTest.resolveParameters()
+        );
+    }
+
+    private TestContext buildContext(final ContainerLifecycleContext context) {
+        return new TestContext(
+                JqwikMicronautExtension.STORE.get().getApplicationContext(),
+                context.optionalContainerClass().orElse(null),
+                context.optionalElement().orElse(null),
+                null,
+                null
         );
     }
 }

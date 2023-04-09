@@ -15,7 +15,7 @@ class NonTransactionalTest {
     @Inject
     private ApplicationContext applicationContext;
 
-    @Property
+    @Property(tries = 1)
     void testMicronautTransactionListenerMissing() {
         assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isFalse();
     }

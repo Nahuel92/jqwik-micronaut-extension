@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import net.jqwik.api.Property;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.util.Maps;
 
 import java.util.Map;
 import java.util.Optional;
@@ -33,10 +34,10 @@ class ApplicationPropertyTest implements TestPropertyProvider {
     @Override
     @NonNull
     public Map<String, String> getProperties() {
-        return Map.ofEntries(Map.entry("dynamic.property", "value"));
+        return Maps.newHashMap("dynamic.property", "value");
     }
 
-    @Property
+    @Property(tries = 1)
     @io.micronaut.context.annotation.Property(name = "test.method.property", value = "Hello method!")
     void successOnInjectingApplicationPropertiesFromDifferentInjectionPoints() {
         SoftAssertions.assertSoftly(softly -> {

@@ -15,11 +15,11 @@ import static org.mockito.Mockito.when;
 
 @JqwikMicronautTest
 @Requires(property = "mockito.test.enabled", defaultValue = StringUtils.FALSE, value = StringUtils.TRUE)
-public class MathServiceTestSimilarNameTest {
+class MathServiceTestSimilarNameTest {
     @Inject
     private MathService mathService;
 
-    @Property
+    @Property(tries = 1)
     void testThatSimilarlyNamedTestSuitesDontLeakMocks() {
         int num = 10;
         when(mathService.compute(num)).then(invocation -> num * 2); // non mock impl is * 4

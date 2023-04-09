@@ -5,12 +5,11 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
+import io.micronaut.test.context.TestContext;
+import io.micronaut.test.context.TestMethodInvocationContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-import net.jqwik.api.lifecycle.LifecycleContext;
-import net.jqwik.api.lifecycle.Lifespan;
-import net.jqwik.api.lifecycle.PropertyLifecycleContext;
-import net.jqwik.api.lifecycle.Store;
+import net.jqwik.api.lifecycle.*;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
@@ -23,11 +22,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
-    public static final Store<JqwikMicronautExtension> EXTENSION_STORE = Store.getOrCreate(
+    public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
             JqwikMicronautExtension.class,
             Lifespan.RUN,
             JqwikMicronautExtension::new
     );
+    private static TestContext testContext;
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -74,8 +74,8 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                                 .findFirst();
 
                         mockBeanMethod.ifPresent(e -> {
-                            try {
-                                final Field field = injectedField.getField();
+                                    try {
+                                        final Field field = injectedField.getField();
                                         field.setAccessible(true);
                                         e.setAccessible(true);
                                         final Object result = e.invoke(specInstance);
@@ -113,5 +113,47 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             final Map<String, String> dynamicPropertiesToAdd = ((TestPropertyProvider) testClassInstance).getProperties();
             testProperties.putAll(dynamicPropertiesToAdd);
         }
+    }
+
+    public TestContext testContext(final PropertyLifecycleContext context) {
+        if (testContext != null) {
+            return testContext;
+        }
+        testContext = new TestContext(
+                applicationContext,
+                context.containerClass(),
+                context.targetMethod(),
+                context.testInstance(),
+                null
+        );
+        return testContext;
+    }
+
+    public TestContext testContext(final TryLifecycleContext context) {
+        if (testContext != null) {
+            return testContext;
+        }
+        testContext = new TestContext(
+                applicationContext,
+                context.containerClass(),
+                context.targetMethod(),
+                context.testInstance(),
+                null
+        );
+        return testContext;
+    }
+
+    public TestMethodInvocationContext<Object> getTestMethodInvocationContext(final TestContext testContext) {
+        return new TestMethodInvocationContext<Object>() {
+            @Override
+            public TestContext getTestContext() {
+                return testContext;
+            }
+
+            @Override
+            public Object proceed() {
+                return null;
+            }
+        };
     }
 }

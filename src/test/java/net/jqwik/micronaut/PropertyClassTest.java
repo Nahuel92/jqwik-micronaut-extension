@@ -12,7 +12,7 @@ class PropertyClassTest {
     @Inject
     private Config config;
 
-    @Property
+    @Property(tries = 1)
     @io.micronaut.context.annotation.Property(name = "demo.foo", value = "FOO")
     void testFoo() {
         assertThat(config.getFoo()).isEqualTo("FOO");

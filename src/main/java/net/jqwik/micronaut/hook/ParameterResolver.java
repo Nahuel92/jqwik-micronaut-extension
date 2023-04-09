@@ -104,7 +104,7 @@ public class ParameterResolver implements ResolveParameterHook {
         @NonNullApi
         @Nonnull
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
-            final ApplicationContext applicationContext = JqwikMicronautExtension.EXTENSION_STORE.get().getApplicationContext();
+            final ApplicationContext applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);
             if (argument != null) {
                 final Parameter parameter = parameterContext.parameter();

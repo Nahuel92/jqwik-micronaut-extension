@@ -10,9 +10,8 @@ class CustomContextBuilderTest {
     @io.micronaut.context.annotation.Property(name = "custom.builder.prop")
     private String val;
 
-    @Property
+    @Property(tries = 1)
     void testCustomBuilderIsUsed() {
         assertThat(val).isEqualTo("value");
     }
 }
-

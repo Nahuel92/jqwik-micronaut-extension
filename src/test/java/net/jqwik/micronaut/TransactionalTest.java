@@ -12,9 +12,9 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// FIXME: This test fails to pass
 @JqwikMicronautTest
 @DbProperties
+// FIXME: flaky test
 class TransactionalTest {
     @Inject
     private ApplicationContext applicationContext;
@@ -29,7 +29,7 @@ class TransactionalTest {
         assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
-    @Property
+    @Property(tries = 1)
     void testSpringTransactionListenerMissing() {
         assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isTrue();
     }

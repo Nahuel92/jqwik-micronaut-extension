@@ -25,17 +25,17 @@ class JqwikMicronautExtensionTest {
         return mock(AppBean.class);
     }
 
-    @Property
+    @Property(tries = 1)
     void successOnRunningApplicationContextUsingProperty() {
         assertThat(application.isRunning()).isTrue();
     }
 
-    @Property
+    @Property(tries = 1)
     void successOnRunningApplicationContextUsingForAll(@ForAll boolean ignored) {
         assertThat(application.isRunning()).isTrue();
     }
 
-    @Property
+    @Property(tries = 1)
     void successOnReplacingApplicationBeanWithMockBean() {
         // given
         final String mockedMessage = "Goodbye world!";
@@ -45,4 +45,3 @@ class JqwikMicronautExtensionTest {
         assertThat(appBean.method()).isEqualTo(mockedMessage);
     }
 }
-

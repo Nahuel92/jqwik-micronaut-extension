@@ -15,7 +15,7 @@ class Simple1Test extends SimpleBaseTest {
     @Inject
     private SimpleService simpleService;
 
-    @Property
+    @Property(tries = 1)
     void testComputeNumToSquare() {
         assertThat(simpleService).isNotNull();
     }
