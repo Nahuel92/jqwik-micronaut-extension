@@ -3,8 +3,6 @@ package net.jqwik.micronaut;
 import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
-import net.jqwik.api.lifecycle.AfterProperty;
-import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -21,20 +19,6 @@ class JpaRollbackTest {
     @Inject
     @PersistenceContext
     private EntityManager entityManager;
-
-    // FIXME: This should be done automatically
-    @BeforeProperty
-    void setup() {
-        if (!entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().begin();
-        }
-    }
-
-    // FIXME: This should be done automatically
-    @AfterProperty
-    void tearDown() {
-        entityManager.getTransaction().rollback();
-    }
 
     @Property(tries = 1)
     void testPersistOne() {

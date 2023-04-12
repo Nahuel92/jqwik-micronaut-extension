@@ -22,9 +22,13 @@ public class TestInterceptor implements AroundTryHook {
     @Nonnull
     public TryExecutionResult aroundTry(final TryLifecycleContext context, final TryExecutor aTry,
                                         final List<Object> parameters) throws Throwable {
+        interceptTestMethod(context);
+        return aTry.execute(parameters);
+    }
+
+    private void interceptTestMethod(final TryLifecycleContext context) throws Throwable {
         final var testContext = extension.testContext(context);
         extension.interceptTest(extension.getTestMethodInvocationContext(testContext));
-        return aTry.execute(parameters);
     }
 
     @Override

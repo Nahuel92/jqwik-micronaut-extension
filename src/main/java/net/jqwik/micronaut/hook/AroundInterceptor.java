@@ -22,19 +22,19 @@ public class AroundInterceptor implements AroundPropertyHook {
     public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
                                                   final PropertyExecutor property) throws Throwable {
         final var testContext = extension.testContext(context);
-        interceptBeforeEach(testContext);
+        interceptBeforeEachMethod(testContext);
         final var execute = property.execute();
-        interceptAfterEach(testContext);
+        interceptAfterEachMethod(testContext);
         return execute;
     }
 
-    private void interceptBeforeEach(final TestContext testContext) throws Throwable {
+    private void interceptBeforeEachMethod(final TestContext testContext) throws Throwable {
         extension.beforeSetupTest(testContext);
         extension.interceptBeforeEach(extension.getTestMethodInvocationContext(testContext));
         extension.afterSetupTest(testContext);
     }
 
-    private void interceptAfterEach(final TestContext testContext) throws Throwable {
+    private void interceptAfterEachMethod(final TestContext testContext) throws Throwable {
         extension.beforeCleanupTest(testContext);
         extension.interceptAfterEach(extension.getTestMethodInvocationContext(testContext));
         extension.afterCleanupTest(testContext);

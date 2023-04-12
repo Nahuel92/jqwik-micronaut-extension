@@ -25,16 +25,26 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                                   final PropertyExecutor property) throws Throwable {
         final var testContext = extension.testContext(context);
         beforeEach(context, testContext);
+        extension.beforeTestExecution(testContext);
         final var execute = property.execute();
+        extension.afterTestExecution(testContext);
         afterEach(context, testContext);
         return execute;
     }
 
     private void beforeEach(final PropertyLifecycleContext context, final TestContext testContext) throws Exception {
+        extension.injectEnclosingTestInstances(context);
+        /*List<Property> props = null;
+        if (testContext.getTestMethod() != null) {
+            final Property[] annotationsByType = testContext.getTestMethod().getAnnotationsByType(Property.class);
+            props = List.of(annotationsByType);
+        }*/
+
         extension.beforeEach(
                 context,
                 context.testInstance(),
                 context.targetMethod(),
+                //props
                 JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
                         context.optionalElement().orElse(null),
                         Property.class
@@ -42,7 +52,6 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
         );
         extension.beforeTestMethod(testContext);
     }
-
 
     private void afterEach(final PropertyLifecycleContext context, final TestContext testContext) throws Throwable {
         extension.afterEach(context);

@@ -37,6 +37,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     @Override
     public void beforeEach(final LifecycleContext context, final Object testInstance,
                            final AnnotatedElement method, final List<Property> propertyAnnotations) {
+        injectEnclosingTestInstances(context);
         super.beforeEach(context, testInstance, method, propertyAnnotations);
     }
 
@@ -149,5 +150,11 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 return null;
             }
         };
+    }
+
+    public void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
+        if (lifecycleContext instanceof PropertyLifecycleContext plc) {
+            plc.testInstances().forEach(applicationContext::inject);
+        }
     }
 }

@@ -10,16 +10,21 @@ import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 public class BeforeMicronautContainerHook implements BeforeContainerHook {
+    private final JqwikMicronautExtension extension;
+
+    BeforeMicronautContainerHook() {
+        this.extension = JqwikMicronautExtension.STORE.get();
+    }
+
     @Override
     @NonNullApi
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
-        JqwikMicronautExtension.STORE.get()
-                .beforeClass(
-                        context,
-                        context.optionalContainerClass().orElse(null),
-                        buildMicronautTestValue(context.optionalContainerClass().orElse(null))
-                );
-        JqwikMicronautExtension.STORE.get().beforeTestClass(buildContext(context));
+        extension.beforeClass(
+                context,
+                context.optionalContainerClass().orElse(null),
+                buildMicronautTestValue(context.optionalContainerClass().orElse(null))
+        );
+        extension.beforeTestClass(buildContext(context));
     }
 
     /**

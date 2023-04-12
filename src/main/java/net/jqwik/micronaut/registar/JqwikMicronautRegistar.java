@@ -10,6 +10,7 @@ public class JqwikMicronautRegistar implements RegistrarHook {
     @Override
     public void registerHooks(final RegistrarHook.Registrar registrar) {
         registrar.register(BeforeMicronautContainerHook.class, PropagationMode.ALL_DESCENDANTS);
+        registrar.register(AfterMicronautContainer.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AroundPropertyMicronaut.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AroundInterceptor.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(TestInterceptor.class, PropagationMode.ALL_DESCENDANTS);
