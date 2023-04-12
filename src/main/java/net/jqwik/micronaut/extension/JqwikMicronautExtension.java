@@ -8,7 +8,10 @@ import io.micronaut.test.context.TestContext;
 import io.micronaut.test.context.TestMethodInvocationContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-import net.jqwik.api.lifecycle.*;
+import net.jqwik.api.lifecycle.LifecycleContext;
+import net.jqwik.api.lifecycle.Lifespan;
+import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.api.lifecycle.Store;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -111,20 +114,6 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public TestContext testContext(final PropertyLifecycleContext context) {
-        if (testContext != null) {
-            return testContext;
-        }
-        testContext = new TestContext(
-                applicationContext,
-                context.containerClass(),
-                context.targetMethod(),
-                context.testInstance(),
-                null
-        );
-        return testContext;
-    }
-
-    public TestContext testContext(final TryLifecycleContext context) {
         if (testContext != null) {
             return testContext;
         }
