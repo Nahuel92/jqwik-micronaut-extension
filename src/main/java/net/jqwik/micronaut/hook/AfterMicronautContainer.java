@@ -17,6 +17,7 @@ public class AfterMicronautContainer implements AfterContainerHook {
     @NonNullApi
     public void afterContainer(final ContainerLifecycleContext context) throws Throwable {
         extension.afterTestClass(buildContext(context));
+        extension.afterClass(context);
     }
 
     private TestContext buildContext(final ContainerLifecycleContext context) {

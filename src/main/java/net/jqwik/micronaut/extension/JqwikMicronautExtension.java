@@ -146,4 +146,9 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             plc.testInstances().forEach(applicationContext::inject);
         }
     }
+
+    @Override
+    public void afterClass(final LifecycleContext context) {
+        super.afterClass(context);
+    }
 }

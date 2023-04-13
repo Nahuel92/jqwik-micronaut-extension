@@ -23,12 +23,6 @@ class JpaSingleTransactionTest {
 
     @BeforeProperty
     void setUp() {
-        // FIXME: This should be done automatically
-        if (!entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().begin();
-        }
-        // FIXME: This should be done automatically
-
         final var book = new Book();
         book.setTitle("The Stand");
         entityManager.persist(book);
@@ -36,10 +30,6 @@ class JpaSingleTransactionTest {
 
     @AfterProperty
     void tearDown() {
-        // FIXME: This should be done automatically
-        entityManager.getTransaction().rollback();
-        // ^^ FIXME: This should be done automatically
-
         // check setup was rolled back
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);
