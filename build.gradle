@@ -7,11 +7,12 @@ group = "net.jqwik"
 
 repositories {
     mavenCentral()
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots' }
 }
 
 dependencies {
-    api("net.jqwik:jqwik:1.7.3")
-    implementation("net.jqwik:jqwik-engine:1.7.3")
+    api("net.jqwik:jqwik:1.7.4-SNAPSHOT")
+    implementation("net.jqwik:jqwik-engine:1.7.4-SNAPSHOT")
     implementation('io.micronaut.test:micronaut-test-core:3.9.2')
     implementation('io.micronaut:micronaut-context:3.8.9')
     implementation 'org.mockito:mockito-core:5.3.0'

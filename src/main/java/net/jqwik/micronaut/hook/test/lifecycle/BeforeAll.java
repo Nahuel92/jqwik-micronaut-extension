@@ -1,4 +1,4 @@
-package net.jqwik.micronaut.hook;
+package net.jqwik.micronaut.hook.test.lifecycle;
 
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.context.TestContext;
@@ -9,16 +9,26 @@ import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
-public class BeforeMicronautContainerHook implements BeforeContainerHook {
+public class BeforeAll implements BeforeContainerHook {
     private final JqwikMicronautExtension extension;
 
-    BeforeMicronautContainerHook() {
+    BeforeAll() {
         this.extension = JqwikMicronautExtension.STORE.get();
     }
 
     @Override
     @NonNullApi
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
+        beforeAll(context);
+    }
+
+    @Override
+    public int beforeContainerProximity() {
+        return -20;
+    }
+
+    private void beforeAll(final ContainerLifecycleContext context) throws Exception {
+        System.out.println("1. beforeAll");
         extension.beforeClass(
                 context,
                 context.optionalContainerClass().orElse(null),

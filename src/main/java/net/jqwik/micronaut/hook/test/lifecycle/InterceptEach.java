@@ -1,4 +1,4 @@
-package net.jqwik.micronaut.hook;
+package net.jqwik.micronaut.hook.test.lifecycle;
 
 import io.micronaut.test.context.TestContext;
 import io.micronaut.test.context.TestMethodInvocationContext;
@@ -12,10 +12,10 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 import java.util.List;
 
-public class TestInterceptor implements AroundTryHook {
+public class InterceptEach implements AroundTryHook {
     private final JqwikMicronautExtension extension;
 
-    TestInterceptor() {
+    InterceptEach() {
         this.extension = JqwikMicronautExtension.STORE.get();
     }
 
@@ -24,12 +24,12 @@ public class TestInterceptor implements AroundTryHook {
     @Nonnull
     public TryExecutionResult aroundTry(final TryLifecycleContext context, final TryExecutor aTry,
                                         final List<Object> parameters) throws Throwable {
-        interceptTestMethod(context, aTry, parameters);
+        interceptTestMethod(context);
         return aTry.execute(parameters);
     }
 
-    private void interceptTestMethod(final TryLifecycleContext context, final TryExecutor aTry,
-                                     final List<Object> parameters) throws Throwable {
+    private void interceptTestMethod(final TryLifecycleContext context) throws Throwable {
+        System.out.println("5. interceptTestMethod");
         extension.interceptTest(
                 new TestMethodInvocationContext<>() {
                     TestContext testContext;
@@ -47,7 +47,6 @@ public class TestInterceptor implements AroundTryHook {
                         return null;
                     }
                 }
-
         );
     }
 

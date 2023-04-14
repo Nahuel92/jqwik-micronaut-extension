@@ -5,14 +5,14 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.test.annotation.TransactionMode;
 import net.jqwik.api.lifecycle.AddLifecycleHook;
-import net.jqwik.micronaut.registar.JqwikMicronautRegistar;
+import net.jqwik.micronaut.registar.JqwikMicronautRegistrar;
 import org.apiguardian.api.API;
 
 import java.lang.annotation.*;
 
 import static org.apiguardian.api.API.Status.EXPERIMENTAL;
 
-@AddLifecycleHook(JqwikMicronautRegistar.class)
+@AddLifecycleHook(JqwikMicronautRegistrar.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.TYPE})
 @Factory

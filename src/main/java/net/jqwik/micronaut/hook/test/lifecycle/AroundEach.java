@@ -1,4 +1,4 @@
-package net.jqwik.micronaut.hook;
+package net.jqwik.micronaut.hook.test.lifecycle;
 
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.context.TestContext;
@@ -11,10 +11,10 @@ import net.jqwik.api.lifecycle.PropertyLifecycleContext;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
-public class AroundPropertyMicronaut implements AroundPropertyHook {
+public class AroundEach implements AroundPropertyHook {
     private final JqwikMicronautExtension extension;
 
-    AroundPropertyMicronaut() {
+    AroundEach() {
         this.extension = JqwikMicronautExtension.STORE.get();
     }
 
@@ -25,14 +25,13 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
                                                   final PropertyExecutor property) throws Throwable {
         final var testContext = extension.testContext(context);
         beforeEach(context, testContext);
-        extension.beforeTestExecution(testContext);
         final var execute = property.execute();
-        extension.afterTestExecution(testContext);
         afterEach(context, testContext);
         return execute;
     }
 
     private void beforeEach(final PropertyLifecycleContext context, final TestContext testContext) throws Exception {
+        System.out.println("2. beforeEach");
         extension.injectEnclosingTestInstances(context);
         extension.beforeEach(
                 context,
@@ -47,10 +46,10 @@ public class AroundPropertyMicronaut implements AroundPropertyHook {
     }
 
     private void afterEach(final PropertyLifecycleContext context, final TestContext testContext) throws Throwable {
+        System.out.println("8. afterEach");
         extension.afterEach(context);
         extension.afterTestMethod(testContext);
     }
-
 
     @Override
     public int aroundPropertyProximity() {

@@ -7,7 +7,7 @@ import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.api.lifecycle.SkipExecutionHook;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
-public class DisabledHook implements SkipExecutionHook {
+public class Disabled implements SkipExecutionHook {
     @Override
     @NonNullApi
     @Nonnull
