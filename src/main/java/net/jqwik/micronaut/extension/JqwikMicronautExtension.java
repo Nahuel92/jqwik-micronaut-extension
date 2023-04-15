@@ -13,10 +13,8 @@ import net.jqwik.api.lifecycle.*;
 import net.jqwik.engine.support.*;
 import net.jqwik.micronaut.annotation.*;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
@@ -68,10 +66,20 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
 
-    @Override
-    public void beforeEach(final LifecycleContext context, final Object testInstance,
-                           final AnnotatedElement method, final List<Property> propertyAnnotations) {
-        super.beforeEach(context, testInstance, method, propertyAnnotations);
+    public void interceptBeforePropertyMethod(PropertyLifecycleContext context) throws Throwable {
+        System.out.println("3. interceptBeforePropertyMethod");
+        final var testContext = testContext(context);
+        beforeSetupTest(testContext);
+        interceptBeforeEach(testMethodInvocation(testContext));
+        afterSetupTest(testContext);
+    }
+
+    public void interceptAfterPropertyMethod(PropertyLifecycleContext context) throws Throwable {
+        System.out.println("7. interceptBeforePropertyMethod");
+        final var testContext = testContext(context);
+        beforeCleanupTest(testContext);
+        interceptAfterEach(testMethodInvocation(testContext));
+        afterCleanupTest(testContext);
     }
 
     @Override
@@ -157,7 +165,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         return testContext;
     }
 
-    public TestMethodInvocationContext<Object> getTestMethodInvocationContext(final TestContext testContext) {
+    private TestMethodInvocationContext<Object> testMethodInvocation(final TestContext testContext) {
         return new TestMethodInvocationContext<>() {
             @Override
             public TestContext getTestContext() {

@@ -6,7 +6,7 @@ import net.jqwik.micronaut.hook.Disabled;
 import net.jqwik.micronaut.hook.ParameterResolver;
 import net.jqwik.micronaut.hook.test.lifecycle.AfterAll;
 import net.jqwik.micronaut.hook.test.lifecycle.AroundPropertyLifecycleMethods;
-import net.jqwik.micronaut.hook.test.lifecycle.AroundInterceptEach;
+import net.jqwik.micronaut.hook.test.lifecycle.AroundInterceptEachPropertyMethod;
 import net.jqwik.micronaut.hook.test.lifecycle.AroundTestExecution;
 import net.jqwik.micronaut.hook.test.lifecycle.BeforeAll;
 import net.jqwik.micronaut.hook.test.lifecycle.InterceptEach;
@@ -19,7 +19,7 @@ public class JqwikMicronautRegistrar implements RegistrarHook {
         registrar.register(BeforeAll.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AfterAll.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AroundPropertyLifecycleMethods.class, PropagationMode.ALL_DESCENDANTS);
-        registrar.register(AroundInterceptEach.class, PropagationMode.ALL_DESCENDANTS);
+        registrar.register(AroundInterceptEachPropertyMethod.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(AroundTestExecution.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(InterceptEach.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(ParameterResolver.class, PropagationMode.ALL_DESCENDANTS);
