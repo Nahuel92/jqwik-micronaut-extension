@@ -23,5 +23,4 @@ public class BeforeAll implements BeforeContainerHook {
         // Run it before @BeforeContainer methods
         return -20;
     }
-
 }

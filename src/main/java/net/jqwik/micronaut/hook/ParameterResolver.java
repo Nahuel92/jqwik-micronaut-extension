@@ -105,32 +105,32 @@ public class ParameterResolver implements ResolveParameterHook {
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
             final var applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);
-            if (argument != null) {
-                final var parameter = parameterContext.parameter();
-                if (argument.isAnnotationPresent(Value.class) || argument.isAnnotationPresent(Property.class)) {
-                    if (parameter.isAnnotationPresent(Value.class)) {
-                        return applicationContext.getEnvironment()
-                                .getProperty(parameter.getAnnotation(Value.class).value()
-                                                .replaceAll("[${}]", StringUtils.EMPTY_STRING),
-                                        parameter.getType()
-                                ).orElseThrow(() ->
-                                        new JqwikException("Unresolvable property specified to @Value: " + parameter.getName())
-                                );
-                    }
-
-                    final var propertyName = parameter.getAnnotation(Property.class).name();
-                    if (propertyName.isEmpty()) {
-                        return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
-                    }
+            if (argument == null) {
+                return applicationContext.getBean(parameterContext.parameter().getType());
+            }
+            final var parameter = parameterContext.parameter();
+            if (argument.isAnnotationPresent(Value.class) || argument.isAnnotationPresent(Property.class)) {
+                if (parameter.isAnnotationPresent(Value.class)) {
                     return applicationContext.getEnvironment()
-                            .getProperty(propertyName, parameter.getType())
-                            .orElseThrow(() ->
-                                    new JqwikException("Unresolvable property specified to @Property: " + parameter.getName())
+                            .getProperty(parameter.getAnnotation(Value.class).value()
+                                            .replaceAll("[${}]", StringUtils.EMPTY_STRING),
+                                    parameter.getType()
+                            ).orElseThrow(() ->
+                                    new JqwikException("Unresolvable property specified to @Value: " + parameter.getName())
                             );
                 }
-                return applicationContext.getBean(argument.getType(), resolveQualifier(argument));
+
+                final var propertyName = parameter.getAnnotation(Property.class).name();
+                if (propertyName.isEmpty()) {
+                    return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
+                }
+                return applicationContext.getEnvironment()
+                        .getProperty(propertyName, parameter.getType())
+                        .orElseThrow(() ->
+                                new JqwikException("Unresolvable property specified to @Property: " + parameter.getName())
+                        );
             }
-            return applicationContext.getBean(parameterContext.parameter().getType());
+            return applicationContext.getBean(argument.getType(), resolveQualifier(argument));
         }
     }
 }

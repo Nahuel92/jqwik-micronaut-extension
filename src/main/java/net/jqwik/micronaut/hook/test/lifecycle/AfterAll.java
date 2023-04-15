@@ -23,5 +23,4 @@ public class AfterAll implements AfterContainerHook {
         // Run it after @AfterContainer methods
         return -20;
     }
-
 }

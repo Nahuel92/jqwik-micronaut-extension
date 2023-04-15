@@ -2,14 +2,12 @@ package net.jqwik.micronaut.hook;
 
 import io.micronaut.context.annotation.Requires;
 import jakarta.annotation.Nonnull;
-import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.LifecycleContext;
 import net.jqwik.api.lifecycle.SkipExecutionHook;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 public class Disabled implements SkipExecutionHook {
     @Override
-    @NonNullApi
     @Nonnull
     public SkipResult shouldBeSkipped(final LifecycleContext context) {
         final var applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();

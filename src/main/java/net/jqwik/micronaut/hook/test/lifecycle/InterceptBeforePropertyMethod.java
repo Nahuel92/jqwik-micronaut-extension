@@ -1,5 +1,7 @@
 package net.jqwik.micronaut.hook.test.lifecycle;
 
+import jakarta.annotation.Nonnull;
+import net.jqwik.api.NonNullApi;
 import net.jqwik.api.lifecycle.AroundPropertyHook;
 import net.jqwik.api.lifecycle.PropertyExecutionResult;
 import net.jqwik.api.lifecycle.PropertyExecutor;
@@ -15,7 +17,10 @@ public class InterceptBeforePropertyMethod {
         }
 
         @Override
-        public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
+        @NonNullApi
+        @Nonnull
+        public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
+                                                      final PropertyExecutor property) throws Throwable {
             micronautExtension.preBeforePropertyMethod(context);
             return property.execute();
         }
@@ -35,7 +40,10 @@ public class InterceptBeforePropertyMethod {
         }
 
         @Override
-        public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
+        @NonNullApi
+        @Nonnull
+        public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
+                                                      final PropertyExecutor property) throws Throwable {
             micronautExtension.postBeforePropertyMethod(context);
             return property.execute();
         }
