@@ -44,10 +44,29 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         afterClass(context);
     }
 
-    @Override
-    public void afterClass(final LifecycleContext context) {
-        super.afterClass(context);
+    public void beforeProperty(final PropertyLifecycleContext context) throws Exception {
+        System.out.println("2. beforeProperty");
+        final var testContext = testContext(context);
+        injectEnclosingTestInstances(context);
+        beforeEach(
+            context,
+            context.testInstance(),
+            context.targetMethod(),
+            JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
+                context.optionalElement().orElse(null),
+                Property.class
+            )
+        );
+        beforeTestMethod(testContext);
     }
+
+    public void afterProperty(final PropertyLifecycleContext context) throws Throwable {
+        System.out.println("8. afterProperty");
+        final var testContext = testContext(context);
+        afterEach(context);
+        afterTestMethod(testContext);
+    }
+
 
     @Override
     public void beforeEach(final LifecycleContext context, final Object testInstance,
@@ -152,7 +171,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         };
     }
 
-    public void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
+    private void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
         if (lifecycleContext instanceof PropertyLifecycleContext plc) {
             plc.testInstances().forEach(applicationContext::inject);
         }
