@@ -31,18 +31,18 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         System.out.println("1. beforeContainer");
         final MicronautTestValue micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
         beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
-        beforeTestClass(buildContext(context));
+        beforeTestClass(buildContainerContext(context));
     }
 
     public void afterContainer(final ContainerLifecycleContext context) throws Exception {
         System.out.println("9. afterContainer");
-        afterTestClass(buildContext(context));
+        afterTestClass(buildContainerContext(context));
         afterClass(context);
     }
 
     public void beforeProperty(final PropertyLifecycleContext context) throws Exception {
         System.out.println("2. beforeProperty");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         injectEnclosingTestInstances(context);
         beforeEach(
             context,
@@ -58,7 +58,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void afterProperty(final PropertyLifecycleContext context) throws Throwable {
         System.out.println("8. afterProperty");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         afterEach(context);
         afterTestMethod(testContext);
     }
@@ -66,37 +66,37 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void preBeforePropertyMethod(PropertyLifecycleContext context) throws Throwable {
         System.out.println("3.1. preBeforePropertyMethod");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         beforeSetupTest(testContext);
     }
 
     public void postBeforePropertyMethod(PropertyLifecycleContext context) throws Throwable {
         System.out.println("3.2. postBeforePropertyMethod");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         afterSetupTest(testContext);
     }
 
     public void preAfterPropertyMethod(PropertyLifecycleContext context) throws Throwable {
         System.out.println("7.1. preAfterPropertyMethod");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         beforeCleanupTest(testContext);
     }
 
     public void postAfterPropertyMethod(PropertyLifecycleContext context) throws Throwable {
         System.out.println("7.2. postAfterPropertyMethod");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         afterCleanupTest(testContext);
     }
 
     public void beforePropertyExecution(PropertyLifecycleContext context) throws Exception {
         System.out.println("4. beforePropertyExecution");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         beforeTestExecution(testContext);
     }
 
     public void afterPropertyExecution(PropertyLifecycleContext context) throws Exception {
         System.out.println("6. afterPropertyExecution");
-        final var testContext = testContext(context);
+        final var testContext = buildPropertyContext(context);
         afterTestExecution(testContext);
     }
 
@@ -170,30 +170,6 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         }
     }
 
-    private TestContext testContext(final PropertyLifecycleContext context) {
-        return new TestContext(
-                applicationContext,
-                context.containerClass(),
-                context.targetMethod(),
-                context.testInstance(),
-                null // TODO: How to handle exceptions that occur during hook executions?
-        );
-    }
-
-    private TestMethodInvocationContext<Object> testMethodInvocation(final TestContext testContext) {
-        return new TestMethodInvocationContext<>() {
-            @Override
-            public TestContext getTestContext() {
-                return testContext;
-            }
-
-            @Override
-            public Object proceed() {
-                return null;
-            }
-        };
-    }
-
     private void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
         if (lifecycleContext instanceof PropertyLifecycleContext plc) {
             plc.testInstances().forEach(applicationContext::inject);
@@ -236,7 +212,17 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         );
     }
 
-    private TestContext buildContext(final ContainerLifecycleContext context) {
+    private TestContext buildPropertyContext(final PropertyLifecycleContext context) {
+        return new TestContext(
+            applicationContext,
+            context.containerClass(),
+            context.targetMethod(),
+            context.testInstance(),
+            null // TODO: How to handle exceptions that occur during hook executions?
+        );
+    }
+
+    private TestContext buildContainerContext(final ContainerLifecycleContext context) {
         return new TestContext(
             JqwikMicronautExtension.STORE.get().getApplicationContext(),
             context.optionalContainerClass().orElse(null),
