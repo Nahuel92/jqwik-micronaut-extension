@@ -20,16 +20,19 @@ class TransactionalTest {
 
     @BeforeProperty
     void setup() {
+        System.out.println("#### setUp");
         assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
     @AfterProperty
     void cleanup() {
+        System.out.println("#### cleanUp");
         assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isTrue();
     }
 
     @Property(tries = 1)
     void testSpringTransactionListenerMissing() {
+        System.out.println("#### testSpringTransactionListenerMissing");
         assertThat(applicationContext.containsBean(DefaultTestTransactionExecutionListener.class)).isTrue();
     }
 }

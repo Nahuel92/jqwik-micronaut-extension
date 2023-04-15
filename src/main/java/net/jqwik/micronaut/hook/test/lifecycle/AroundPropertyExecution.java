@@ -8,10 +8,10 @@ import net.jqwik.api.lifecycle.PropertyExecutor;
 import net.jqwik.api.lifecycle.PropertyLifecycleContext;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
-public class AroundTestExecution implements AroundPropertyHook {
+public class AroundPropertyExecution implements AroundPropertyHook {
     private final JqwikMicronautExtension extension;
 
-    AroundTestExecution() {
+    AroundPropertyExecution() {
         this.extension = JqwikMicronautExtension.STORE.get();
     }
 
@@ -20,17 +20,16 @@ public class AroundTestExecution implements AroundPropertyHook {
     @Nonnull
     public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
                                                   final PropertyExecutor property) throws Throwable {
-        final var testContext = extension.testContext(context);
-        System.out.println("4. beforeTestExecution");
-        extension.beforeTestExecution(testContext);
+        extension.beforePropertyExecution(context);
+        // TODO: use property.executeAndFinally(..)
         final var execute = property.execute();
-        System.out.println("6. afterTestExecution");
-        extension.afterTestExecution(testContext);
+        extension.afterPropertyExecution(context);
         return execute;
     }
 
     @Override
     public int aroundPropertyProximity() {
-        return -15;
+        // In-between @BeforeProperty, @AfterProperty and actual property execution
+        return -5;
     }
 }
