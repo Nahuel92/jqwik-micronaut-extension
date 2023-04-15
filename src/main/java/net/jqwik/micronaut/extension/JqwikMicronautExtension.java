@@ -22,7 +22,6 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             Lifespan.RUN,
             JqwikMicronautExtension::new
     );
-    private static TestContext testContext;
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -172,17 +171,13 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     private TestContext testContext(final PropertyLifecycleContext context) {
-        if (testContext != null) {
-            return testContext;
-        }
-        testContext = new TestContext(
+        return new TestContext(
                 applicationContext,
                 context.containerClass(),
                 context.targetMethod(),
                 context.testInstance(),
                 null // TODO: How to handle exceptions that occur during hook executions?
         );
-        return testContext;
     }
 
     private TestMethodInvocationContext<Object> testMethodInvocation(final TestContext testContext) {
