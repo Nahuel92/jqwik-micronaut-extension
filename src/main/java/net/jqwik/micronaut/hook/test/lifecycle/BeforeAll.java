@@ -23,6 +23,7 @@ public class BeforeAll implements BeforeContainerHook {
 
     @Override
     public int beforeContainerProximity() {
+        // Run it before @BeforeContainer methods
         return -20;
     }
 

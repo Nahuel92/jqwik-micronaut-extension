@@ -38,6 +38,12 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         beforeTestClass(buildContext(context));
     }
 
+    public void afterContainer(final ContainerLifecycleContext context) throws Exception {
+        System.out.println("9. afterContainer");
+        afterTestClass(buildContext(context));
+        afterClass(context);
+    }
+
     @Override
     public void afterClass(final LifecycleContext context) {
         super.afterClass(context);
