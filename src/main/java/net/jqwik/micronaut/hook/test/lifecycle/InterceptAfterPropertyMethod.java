@@ -13,10 +13,9 @@ public class InterceptAfterPropertyMethod {
 
 		@Override
 		public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
-			// TODO: Use property.executeAndFinally(..)
-			PropertyExecutionResult result = property.execute();
-			micronautExtension.preAfterPropertyMethod(context);
-			return result;
+			return property.executeAndFinally(
+				() -> micronautExtension.preAfterPropertyMethod(context)
+			);
 		}
 
 		@Override
@@ -35,10 +34,9 @@ public class InterceptAfterPropertyMethod {
 
 		@Override
 		public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
-			// TODO: Use property.executeAndFinally(..)
-			PropertyExecutionResult result = property.execute();
-			micronautExtension.postAfterPropertyMethod(context);
-			return result;
+			return property.executeAndFinally(
+				() -> micronautExtension.postAfterPropertyMethod(context)
+			);
 		}
 
 		@Override

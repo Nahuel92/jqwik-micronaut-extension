@@ -21,10 +21,9 @@ public class AroundPropertyLifecycleMethods implements AroundPropertyHook {
 		final PropertyExecutor property
 	) throws Throwable {
 		extension.beforeProperty(context);
-		// TODO: Use property.executeAndFinally(..) for better error handling
-		final var execute = property.execute();
-		extension.afterProperty(context);
-		return execute;
+		return property.executeAndFinally(
+			() -> extension.afterProperty(context)
+		);
 	}
 
 	@Override
