@@ -16,11 +16,12 @@ import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
 import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
     public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
@@ -61,7 +62,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void afterProperty(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        runCallable(() -> {
+        runHooks(() -> {
             afterEach(context);
             afterTestMethod(testContext);
             return null;
@@ -80,7 +81,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void preAfterPropertyMethod(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        runCallable(() -> {
+        runHooks(() -> {
             beforeCleanupTest(testContext);
             return null;
         });
@@ -88,7 +89,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void postAfterPropertyMethod(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        runCallable(() -> {
+        runHooks(() -> {
             afterCleanupTest(testContext);
             return null;
         });
@@ -101,66 +102,10 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     public void afterPropertyExecution(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        runCallable(() -> {
+        runHooks(() -> {
             afterTestExecution(testContext);
             return null;
         });
-    }
-
-    @Override
-    protected void alignMocks(final LifecycleContext context, final Object instance) {
-        if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
-            return;
-        }
-        plc.testInstances()
-                .stream()
-                .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
-                .findAny()
-                .ifPresent(specInstance -> {
-                    final var mockBeanMethods = getMockBeanAnnotated(specInstance.getClass().getDeclaredMethods());
-                    final var mockBeanFields = getMockBeanAnnotated(specInstance.getClass().getDeclaredFields());
-
-                    for (final var injectedField : specDefinition.getInjectedFields()) {
-                        final var mockBeanMethod = mockBeanMethods.stream()
-                                .filter(e -> e.getReturnType().equals(injectedField.getType()))
-                                .findFirst();
-
-                        final var mockBeanField = mockBeanFields.stream()
-                                .filter(e -> e.getType().equals(injectedField.getType()))
-                                .findFirst();
-
-                        mockBeanMethod.ifPresent(e -> {
-                                    try {
-                                        final var field = injectedField.getField();
-                                        field.setAccessible(true);
-                                        e.setAccessible(true);
-                                        final Object result = e.invoke(specInstance);
-                                        field.set(specInstance, result);
-                                    } catch (final IllegalAccessException | InvocationTargetException ex) {
-                                        throw new RuntimeException(ex);
-                                    }
-                                }
-                        );
-
-                        mockBeanField.ifPresent(e -> {
-                            try {
-                                final var field = injectedField.getField();
-                                field.setAccessible(true);
-                                e.setAccessible(true);
-                                field.set(specInstance, e.get(specInstance));
-                            } catch (final IllegalAccessException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        });
-                    }
-                });
-    }
-
-    @SafeVarargs
-    private <T extends AccessibleObject> List<T> getMockBeanAnnotated(final T... accessibleObject) {
-        return Arrays.stream(accessibleObject)
-                .filter(e -> e.isAnnotationPresent(MockBean.class))
-                .toList();
     }
 
     @Override
@@ -174,9 +119,64 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 .ifPresent(testProperties::putAll);
     }
 
-    private void runCallable(final Callable<Void> callable) {
+    @Override
+    protected void alignMocks(final LifecycleContext context, final Object instance) {
+        if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
+            return;
+        }
+        plc.testInstances()
+                .stream()
+                .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
+                .findAny()
+                .ifPresent(injectMocks());
+    }
+
+    private Consumer<Object> injectMocks() {
+        return specInstance -> {
+            final Class<?> specInstanceClass = specInstance.getClass();
+            final var mockBeanAnnotatedMethods = getMockBeanAnnotated(specInstanceClass.getDeclaredMethods());
+            final var mockBeanAnnotatedFields = getMockBeanAnnotated(specInstanceClass.getDeclaredFields());
+            for (final var injectedField : specDefinition.getInjectedFields()) {
+                mockBeanAnnotatedMethods.stream()
+                        .filter(e -> e.getReturnType().equals(injectedField.getType()))
+                        .findFirst()
+                        .ifPresent(e -> {
+                                    final Callable<?> mock = () -> e.invoke(specInstance);
+                                    injectMock(specInstance, injectedField.getField(), e, mock);
+                                }
+                        );
+                mockBeanAnnotatedFields.stream()
+                        .filter(e -> e.getType().equals(injectedField.getType()))
+                        .findFirst()
+                        .ifPresent(e -> {
+                            final Callable<?> mock = () -> e.get(specInstance);
+                            injectMock(specInstance, injectedField.getField(), e, mock);
+                        });
+            }
+        };
+    }
+
+    @SafeVarargs
+    private <T extends AccessibleObject> List<T> getMockBeanAnnotated(final T... accessibleObject) {
+        return Arrays.stream(accessibleObject)
+                .filter(e -> e.isAnnotationPresent(MockBean.class))
+                .toList();
+    }
+
+    private void injectMock(final Object specInstance, final Field fieldToInject,
+                            final AccessibleObject accessibleObject, final Callable<?> mockProvider) {
+        fieldToInject.setAccessible(true);
+        accessibleObject.setAccessible(true);
         try {
-            callable.call();
+            fieldToInject.set(specInstance, mockProvider.call());
+        } catch (final Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private void runHooks(final Callable<Void> hooks) {
+        try {
+            hooks.call();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -199,13 +199,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 .stream()
                 .map(this::buildValueObject)
                 .findFirst()
-                .orElseGet(() ->
-                        JqwikAnnotationSupport.findContainerAnnotations(testClass.getSuperclass(), JqwikMicronautTest.class)
-                                .stream()
-                                .map(this::buildValueObject)
-                                .findFirst()
-                                .orElse(null)
-                );
+                .orElse(null);
     }
 
     private MicronautTestValue buildValueObject(final JqwikMicronautTest micronautTest) {
@@ -236,7 +230,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     private TestContext buildContainerContext(final ContainerLifecycleContext context) {
         return new TestContext(
-                JqwikMicronautExtension.STORE.get().getApplicationContext(),
+                applicationContext,
                 context.optionalContainerClass().orElse(null),
                 context.optionalElement().orElse(null),
                 null,
