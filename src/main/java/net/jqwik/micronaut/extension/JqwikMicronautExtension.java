@@ -4,17 +4,21 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.annotation.MicronautTestValue;
 import io.micronaut.test.annotation.MockBean;
-import io.micronaut.test.context.*;
+import io.micronaut.test.context.TestContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-
-import net.jqwik.api.lifecycle.*;
-import net.jqwik.engine.support.*;
-import net.jqwik.micronaut.annotation.*;
+import net.jqwik.api.lifecycle.ContainerLifecycleContext;
+import net.jqwik.api.lifecycle.LifecycleContext;
+import net.jqwik.api.lifecycle.Lifespan;
+import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.api.lifecycle.Store;
+import net.jqwik.engine.support.JqwikAnnotationSupport;
+import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
     public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
@@ -28,78 +32,86 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
-        System.out.println("1. beforeContainer");
         final MicronautTestValue micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
         beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
         beforeTestClass(buildContainerContext(context));
     }
 
     public void afterContainer(final ContainerLifecycleContext context) throws Exception {
-        System.out.println("9. afterContainer");
         afterTestClass(buildContainerContext(context));
         afterClass(context);
     }
 
     public void beforeProperty(final PropertyLifecycleContext context) throws Exception {
-        System.out.println("2. beforeProperty");
         final var testContext = buildPropertyContext(context);
         injectEnclosingTestInstances(context);
         beforeEach(
-            context,
-            context.testInstance(),
-            context.targetMethod(),
-            JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
-                context.optionalElement().orElse(null),
-                Property.class
-            )
+                context,
+                context.testInstance(),
+                context.targetMethod(),
+                JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
+                        context.optionalElement().orElse(null),
+                        Property.class
+                )
         );
         beforeTestMethod(testContext);
     }
 
-    public void afterProperty(final PropertyLifecycleContext context) throws Throwable {
-        System.out.println("8. afterProperty");
+    public void afterProperty(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        afterEach(context);
-        afterTestMethod(testContext);
+        runCallable(() -> {
+            afterEach(context);
+            afterTestMethod(testContext);
+            return null;
+        });
     }
 
-
-    public void preBeforePropertyMethod(PropertyLifecycleContext context) throws Throwable {
-        System.out.println("3.1. preBeforePropertyMethod");
+    public void preBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
         final var testContext = buildPropertyContext(context);
         beforeSetupTest(testContext);
     }
 
-    public void postBeforePropertyMethod(PropertyLifecycleContext context) throws Throwable {
-        System.out.println("3.2. postBeforePropertyMethod");
+    public void postBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
         final var testContext = buildPropertyContext(context);
         afterSetupTest(testContext);
     }
 
-    public void preAfterPropertyMethod(PropertyLifecycleContext context) throws Throwable {
-        System.out.println("7.1. preAfterPropertyMethod");
+    public void preAfterPropertyMethod(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        beforeCleanupTest(testContext);
+        runCallable(() -> {
+            beforeCleanupTest(testContext);
+            return null;
+        });
     }
 
-    public void postAfterPropertyMethod(PropertyLifecycleContext context) throws Throwable {
-        System.out.println("7.2. postAfterPropertyMethod");
+    public void postAfterPropertyMethod(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        afterCleanupTest(testContext);
+        runCallable(() -> {
+            afterCleanupTest(testContext);
+            return null;
+        });
     }
 
-    public void beforePropertyExecution(PropertyLifecycleContext context) throws Exception {
-        System.out.println("4. beforePropertyExecution");
+    public void beforePropertyExecution(final PropertyLifecycleContext context) throws Exception {
         final var testContext = buildPropertyContext(context);
         beforeTestExecution(testContext);
     }
 
-    public void afterPropertyExecution(PropertyLifecycleContext context) throws Exception {
-        System.out.println("6. afterPropertyExecution");
+    public void afterPropertyExecution(final PropertyLifecycleContext context) {
         final var testContext = buildPropertyContext(context);
-        afterTestExecution(testContext);
+        runCallable(() -> {
+            afterTestExecution(testContext);
+            return null;
+        });
     }
 
+    private void runCallable(final Callable<Void> callable) {
+        try {
+            callable.call();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     protected void alignMocks(final LifecycleContext context, final Object instance) {
@@ -184,52 +196,51 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
      */
     private MicronautTestValue buildMicronautTestValue(final Class<?> testClass) {
         return JqwikAnnotationSupport.findContainerAnnotations(testClass, JqwikMicronautTest.class)
-                                     .stream()
-                                     .map(this::buildValueObject)
-                                     .findFirst()
-                                     .orElseGet(() ->
-                                                    JqwikAnnotationSupport.findContainerAnnotations(testClass.getSuperclass(), JqwikMicronautTest.class)
-                                                                          .stream()
-                                                                          .map(this::buildValueObject)
-                                                                          .findFirst()
-                                                                          .orElse(null)
-                                     );
+                .stream()
+                .map(this::buildValueObject)
+                .findFirst()
+                .orElseGet(() ->
+                        JqwikAnnotationSupport.findContainerAnnotations(testClass.getSuperclass(), JqwikMicronautTest.class)
+                                .stream()
+                                .map(this::buildValueObject)
+                                .findFirst()
+                                .orElse(null)
+                );
     }
 
     private MicronautTestValue buildValueObject(final JqwikMicronautTest micronautTest) {
         return new MicronautTestValue(
-            micronautTest.application(),
-            micronautTest.environments(),
-            micronautTest.packages(),
-            micronautTest.propertySources(),
-            micronautTest.rollback(),
-            micronautTest.transactional(),
-            micronautTest.rebuildContext(),
-            micronautTest.contextBuilder(),
-            micronautTest.transactionMode(),
-            micronautTest.startApplication(),
-            micronautTest.resolveParameters()
+                micronautTest.application(),
+                micronautTest.environments(),
+                micronautTest.packages(),
+                micronautTest.propertySources(),
+                micronautTest.rollback(),
+                micronautTest.transactional(),
+                micronautTest.rebuildContext(),
+                micronautTest.contextBuilder(),
+                micronautTest.transactionMode(),
+                micronautTest.startApplication(),
+                micronautTest.resolveParameters()
         );
     }
 
     private TestContext buildPropertyContext(final PropertyLifecycleContext context) {
         return new TestContext(
-            applicationContext,
-            context.containerClass(),
-            context.targetMethod(),
-            context.testInstance(),
-            null // TODO: How to handle exceptions that occur during hook executions?
+                applicationContext,
+                context.containerClass(),
+                context.targetMethod(),
+                context.testInstance(),
+                null // TODO: How to handle exceptions that occur during hook executions?
         );
     }
 
     private TestContext buildContainerContext(final ContainerLifecycleContext context) {
         return new TestContext(
-            JqwikMicronautExtension.STORE.get().getApplicationContext(),
-            context.optionalContainerClass().orElse(null),
-            context.optionalElement().orElse(null),
-            null,
-            null
+                JqwikMicronautExtension.STORE.get().getApplicationContext(),
+                context.optionalContainerClass().orElse(null),
+                context.optionalElement().orElse(null),
+                null,
+                null
         );
     }
-
 }

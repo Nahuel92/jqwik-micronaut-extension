@@ -1,47 +1,53 @@
 package net.jqwik.micronaut.hook.test.lifecycle;
 
-import net.jqwik.api.lifecycle.*;
-import net.jqwik.micronaut.extension.*;
+import jakarta.annotation.Nonnull;
+import net.jqwik.api.NonNullApi;
+import net.jqwik.api.lifecycle.AroundPropertyHook;
+import net.jqwik.api.lifecycle.PropertyExecutionResult;
+import net.jqwik.api.lifecycle.PropertyExecutor;
+import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 public class InterceptAfterPropertyMethod {
-	public static class Pre implements AroundPropertyHook {
-		private final JqwikMicronautExtension micronautExtension;
+    public static class Pre implements AroundPropertyHook {
+        private final JqwikMicronautExtension micronautExtension;
 
-		public Pre() {
-			micronautExtension = JqwikMicronautExtension.STORE.get();
-		}
+        Pre() {
+            micronautExtension = JqwikMicronautExtension.STORE.get();
+        }
 
-		@Override
-		public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
-			return property.executeAndFinally(
-				() -> micronautExtension.preAfterPropertyMethod(context)
-			);
-		}
+        @Override
+        @NonNullApi
+        @Nonnull
+        public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
+                                                      final PropertyExecutor property) {
+            return property.executeAndFinally(() -> micronautExtension.preAfterPropertyMethod(context));
+        }
 
-		@Override
-		public int aroundPropertyProximity() {
-			return -9;
-		}
-	}
+        @Override
+        public int aroundPropertyProximity() {
+            return -9;
+        }
+    }
 
-	public static class Post implements AroundPropertyHook {
+    public static class Post implements AroundPropertyHook {
+        private final JqwikMicronautExtension micronautExtension;
 
-		private final JqwikMicronautExtension micronautExtension;
+        Post() {
+            micronautExtension = JqwikMicronautExtension.STORE.get();
+        }
 
-		public Post() {
-			micronautExtension = JqwikMicronautExtension.STORE.get();
-		}
+        @Override
+        @NonNullApi
+        @Nonnull
+        public PropertyExecutionResult aroundProperty(final PropertyLifecycleContext context,
+                                                      final PropertyExecutor property) {
+            return property.executeAndFinally(() -> micronautExtension.postAfterPropertyMethod(context));
+        }
 
-		@Override
-		public PropertyExecutionResult aroundProperty(PropertyLifecycleContext context, PropertyExecutor property) throws Throwable {
-			return property.executeAndFinally(
-				() -> micronautExtension.postAfterPropertyMethod(context)
-			);
-		}
-
-		@Override
-		public int aroundPropertyProximity() {
-			return -11;
-		}
-	}
+        @Override
+        public int aroundPropertyProximity() {
+            return -11;
+        }
+    }
 }
