@@ -23,7 +23,6 @@ public class JqwikMicronautRegistrar implements RegistrarHook {
 
         registrar.register(AroundPropertyExecution.class, PropagationMode.ALL_DESCENDANTS);
 
-        registrar.register(InterceptEach.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(ParameterResolver.class, PropagationMode.ALL_DESCENDANTS);
         registrar.register(Disabled.class, PropagationMode.ALL_DESCENDANTS);
     }

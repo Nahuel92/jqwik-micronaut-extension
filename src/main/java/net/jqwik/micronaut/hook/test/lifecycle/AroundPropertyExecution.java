@@ -8,6 +8,7 @@ import net.jqwik.api.lifecycle.PropertyExecutor;
 import net.jqwik.api.lifecycle.PropertyLifecycleContext;
 import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
+// TODO: Maybe this should be an AroundTryHook?
 public class AroundPropertyExecution implements AroundPropertyHook {
     private final JqwikMicronautExtension extension;
 
