@@ -15,8 +15,10 @@ import net.jqwik.api.lifecycle.Store;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -32,7 +34,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
-        final MicronautTestValue micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
+        final var micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
         beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
         beforeTestClass(buildContainerContext(context));
     }
@@ -105,14 +107,6 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         });
     }
 
-    private void runCallable(final Callable<Void> callable) {
-        try {
-            callable.call();
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Override
     protected void alignMocks(final LifecycleContext context, final Object instance) {
         if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
@@ -123,13 +117,8 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
                 .findAny()
                 .ifPresent(specInstance -> {
-                    final var mockBeanMethods = Arrays.stream(specInstance.getClass().getDeclaredMethods())
-                            .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .toList();
-
-                    final var mockBeanFields = Arrays.stream(specInstance.getClass().getDeclaredFields())
-                            .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .toList();
+                    final var mockBeanMethods = getMockBeanAnnotated(specInstance.getClass().getDeclaredMethods());
+                    final var mockBeanFields = getMockBeanAnnotated(specInstance.getClass().getDeclaredFields());
 
                     for (final var injectedField : specDefinition.getInjectedFields()) {
                         final var mockBeanMethod = mockBeanMethods.stream()
@@ -167,18 +156,29 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 });
     }
 
+    @SafeVarargs
+    private <T extends AccessibleObject> List<T> getMockBeanAnnotated(final T... accessibleObject) {
+        return Arrays.stream(accessibleObject)
+                .filter(e -> e.isAnnotationPresent(MockBean.class))
+                .toList();
+    }
+
     @Override
     protected void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
                                          final Map<String, Object> testProperties) {
-        if (context.optionalContainerClass().isEmpty()) {
-            return;
-        }
-        final Class<?> testContainerClass = context.optionalContainerClass().get();
-        final Object testClassInstance = context.newInstance(testContainerClass);
+        context.optionalContainerClass()
+                .map(context::newInstance)
+                .filter(TestPropertyProvider.class::isInstance)
+                .map(TestPropertyProvider.class::cast)
+                .map(TestPropertyProvider::getProperties)
+                .ifPresent(testProperties::putAll);
+    }
 
-        if (testClassInstance instanceof TestPropertyProvider propertyProvider) {
-            final Map<String, String> dynamicPropertiesToAdd = propertyProvider.getProperties();
-            testProperties.putAll(dynamicPropertiesToAdd);
+    private void runCallable(final Callable<Void> callable) {
+        try {
+            callable.call();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
