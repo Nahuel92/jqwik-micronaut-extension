@@ -3,7 +3,7 @@ package net.jqwik.micronaut;
 import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
-import net.jqwik.api.lifecycle.AfterProperty;
+import net.jqwik.api.lifecycle.*;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -18,6 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JpaSingleTransactionNoSetupTest {
     @Inject
     private EntityManager entityManager;
+
+    @BeforeProperty
+    void setUp() {
+        System.out.println("##### setUp");
+    }
 
     @AfterProperty
     void tearDown() {
