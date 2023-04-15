@@ -8,10 +8,10 @@ import io.micronaut.test.context.TestContext;
 import io.micronaut.test.context.TestMethodInvocationContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-import net.jqwik.api.lifecycle.LifecycleContext;
-import net.jqwik.api.lifecycle.Lifespan;
-import net.jqwik.api.lifecycle.PropertyLifecycleContext;
-import net.jqwik.api.lifecycle.Store;
+
+import net.jqwik.api.lifecycle.*;
+import net.jqwik.engine.support.*;
+import net.jqwik.micronaut.annotation.*;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -31,21 +31,22 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
         return applicationContext;
     }
 
+    public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
+        System.out.println("1. beforeContainer");
+        final MicronautTestValue micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
+        beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
+        beforeTestClass(buildContext(context));
+    }
+
     @Override
-    public void beforeClass(final LifecycleContext context, final Class<?> testClass,
-                            final MicronautTestValue testAnnotationValue) {
-        super.beforeClass(context, testClass, testAnnotationValue);
+    public void afterClass(final LifecycleContext context) {
+        super.afterClass(context);
     }
 
     @Override
     public void beforeEach(final LifecycleContext context, final Object testInstance,
                            final AnnotatedElement method, final List<Property> propertyAnnotations) {
         super.beforeEach(context, testInstance, method, propertyAnnotations);
-    }
-
-    @Override
-    public void afterClass(final LifecycleContext context) {
-        super.afterClass(context);
     }
 
     @Override
@@ -150,4 +151,51 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             plc.testInstances().forEach(applicationContext::inject);
         }
     }
+
+    /**
+     * Builds a {@link MicronautTestValue} object from the provided class (e.g. by scanning annotations).
+     *
+     * @param testClass the class to extract builder configuration from
+     * @return a MicronautTestValue to configure the test application context
+     */
+    private MicronautTestValue buildMicronautTestValue(final Class<?> testClass) {
+        return JqwikAnnotationSupport.findContainerAnnotations(testClass, JqwikMicronautTest.class)
+                                     .stream()
+                                     .map(this::buildValueObject)
+                                     .findFirst()
+                                     .orElseGet(() ->
+                                                    JqwikAnnotationSupport.findContainerAnnotations(testClass.getSuperclass(), JqwikMicronautTest.class)
+                                                                          .stream()
+                                                                          .map(this::buildValueObject)
+                                                                          .findFirst()
+                                                                          .orElse(null)
+                                     );
+    }
+
+    private MicronautTestValue buildValueObject(final JqwikMicronautTest micronautTest) {
+        return new MicronautTestValue(
+            micronautTest.application(),
+            micronautTest.environments(),
+            micronautTest.packages(),
+            micronautTest.propertySources(),
+            micronautTest.rollback(),
+            micronautTest.transactional(),
+            micronautTest.rebuildContext(),
+            micronautTest.contextBuilder(),
+            micronautTest.transactionMode(),
+            micronautTest.startApplication(),
+            micronautTest.resolveParameters()
+        );
+    }
+
+    private TestContext buildContext(final ContainerLifecycleContext context) {
+        return new TestContext(
+            JqwikMicronautExtension.STORE.get().getApplicationContext(),
+            context.optionalContainerClass().orElse(null),
+            context.optionalElement().orElse(null),
+            null,
+            null
+        );
+    }
+
 }
