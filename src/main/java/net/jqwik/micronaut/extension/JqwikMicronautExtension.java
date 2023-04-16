@@ -29,7 +29,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
-        final var micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
+        final MicronautTestValue micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
         beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
         beforeTestClass(buildContainerContext(context));
     }
@@ -40,7 +40,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void beforeProperty(final PropertyLifecycleContext context) throws Exception {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         injectEnclosingTestInstances(context);
         beforeEach(
                 context,
@@ -55,7 +55,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void afterProperty(final PropertyLifecycleContext context) {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         runHooks(() -> {
             afterEach(context);
             afterTestMethod(testContext);
@@ -64,17 +64,17 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void preBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         beforeSetupTest(testContext);
     }
 
     public void postBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         afterSetupTest(testContext);
     }
 
     public void preAfterPropertyMethod(final PropertyLifecycleContext context) {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         runHooks(() -> {
             beforeCleanupTest(testContext);
             return null;
@@ -82,7 +82,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void postAfterPropertyMethod(final PropertyLifecycleContext context) {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         runHooks(() -> {
             afterCleanupTest(testContext);
             return null;
@@ -90,12 +90,12 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     public void beforePropertyExecution(final PropertyLifecycleContext context) throws Exception {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         beforeTestExecution(testContext);
     }
 
     public void afterPropertyExecution(final PropertyLifecycleContext context) {
-        final var testContext = buildPropertyContext(context);
+        final TestContext testContext = buildPropertyContext(context);
         runHooks(() -> {
             afterTestExecution(testContext);
             return null;
@@ -115,10 +115,10 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
 
     @Override
     protected void alignMocks(final LifecycleContext context, final Object instance) {
-        if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
+        if (specDefinition == null || !(context instanceof PropertyLifecycleContext)) {
             return;
         }
-        plc.testInstances()
+        ((PropertyLifecycleContext) context).testInstances()
                 .stream()
                 .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
                 .findAny()
@@ -134,8 +134,8 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
     }
 
     private void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
-        if (lifecycleContext instanceof PropertyLifecycleContext plc) {
-            plc.testInstances().forEach(applicationContext::inject);
+        if (lifecycleContext instanceof PropertyLifecycleContext) {
+            ((PropertyLifecycleContext) lifecycleContext).testInstances().forEach(applicationContext::inject);
         }
     }
 

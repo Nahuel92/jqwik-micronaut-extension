@@ -23,7 +23,7 @@ class JpaSingleTransactionTest {
 
     @BeforeProperty
     void setUp() {
-        final var book = new Book();
+        final Book book = new Book();
         book.setTitle("The Stand");
         entityManager.persist(book);
     }

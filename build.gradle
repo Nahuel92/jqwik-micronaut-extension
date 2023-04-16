@@ -23,7 +23,7 @@ dependencies {
 
     /* JPA dependencies */
     testImplementation("io.micronaut.data:micronaut-data-hibernate-jpa:3.10.0")
-    testImplementation 'org.springframework:spring-tx:6.0.7'
+    testImplementation 'org.springframework:spring-tx:5.3.27'
     testRuntimeOnly('com.h2database:h2:2.1.214')
     testRuntimeOnly('io.micronaut.configuration:micronaut-jdbc-tomcat:2.2.6')
     /* End of JPA dependencies */

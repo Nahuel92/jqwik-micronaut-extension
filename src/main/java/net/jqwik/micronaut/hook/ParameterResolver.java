@@ -99,12 +99,12 @@ public class ParameterResolver implements ResolveParameterHook {
         @NonNullApi
         @Nonnull
         public Object get(final Optional<TryLifecycleContext> optionalTry) {
-            final var applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
+            final ApplicationContext applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
             final Argument<?> argument = getArgument(parameterContext, applicationContext);
             if (argument == null) {
                 return applicationContext.getBean(parameterContext.parameter().getType());
             }
-            final var parameter = parameterContext.parameter();
+            final Parameter parameter = parameterContext.parameter();
             if (parameter.isAnnotationPresent(Value.class)) {
                 return propertyFromValueAnnotation(applicationContext, parameter);
             }
@@ -126,7 +126,7 @@ public class ParameterResolver implements ResolveParameterHook {
 
         private Object propertyFromPropertyAnnotation(final ApplicationContext applicationContext,
                                                       final Argument<?> argument, final Parameter parameter) {
-            final var propertyName = parameter.getAnnotation(Property.class).name();
+            final String propertyName = parameter.getAnnotation(Property.class).name();
             if (propertyName.isEmpty()) {
                 return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
             }

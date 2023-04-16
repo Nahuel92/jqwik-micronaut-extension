@@ -10,8 +10,8 @@ public class Disabled implements SkipExecutionHook {
     @Override
     @Nonnull
     public SkipResult shouldBeSkipped(final LifecycleContext context) {
-        final var applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
-        final var isAnyPropertyMissing = context.findAnnotationsInContainer(Requires.class)
+        final io.micronaut.context.ApplicationContext applicationContext = JqwikMicronautExtension.STORE.get().getApplicationContext();
+        final boolean isAnyPropertyMissing = context.findAnnotationsInContainer(Requires.class)
                 .stream()
                 .map(Requires::property)
                 .anyMatch(e -> !applicationContext.containsProperties(e));
