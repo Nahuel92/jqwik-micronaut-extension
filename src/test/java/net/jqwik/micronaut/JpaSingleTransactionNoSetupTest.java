@@ -4,7 +4,6 @@ import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
 import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.AfterProperty;
-import net.jqwik.api.lifecycle.BeforeProperty;
 import net.jqwik.micronaut.annotation.DbProperties;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 import net.jqwik.micronaut.beans.Book;
@@ -20,20 +19,8 @@ class JpaSingleTransactionNoSetupTest {
     @Inject
     private EntityManager entityManager;
 
-    // FIXME: This should be done automatically
-    @BeforeProperty
-    void setup() {
-        if (!entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().begin();
-        }
-    }
-
     @AfterProperty
     void tearDown() {
-        // FIXME: This should be done automatically
-        entityManager.getTransaction().rollback();
-        // ^^ FIXME: This should be done automatically
-
         // check test was rolled back
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);

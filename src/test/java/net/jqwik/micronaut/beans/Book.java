@@ -5,8 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class Book {
 
+public class Book {
     @GeneratedValue
     @Id
     private Long id;

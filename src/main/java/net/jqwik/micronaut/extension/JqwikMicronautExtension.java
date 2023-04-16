@@ -2,24 +2,20 @@ package net.jqwik.micronaut.extension;
 
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
-import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.test.annotation.MicronautTestValue;
-import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.context.TestContext;
-import io.micronaut.test.context.TestMethodInvocationContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
-import net.jqwik.api.lifecycle.*;
+import net.jqwik.api.lifecycle.ContainerLifecycleContext;
+import net.jqwik.api.lifecycle.LifecycleContext;
+import net.jqwik.api.lifecycle.Lifespan;
+import net.jqwik.api.lifecycle.PropertyLifecycleContext;
+import net.jqwik.api.lifecycle.Store;
+import net.jqwik.engine.support.JqwikAnnotationSupport;
+import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
     public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
@@ -27,133 +23,169 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
             Lifespan.RUN,
             JqwikMicronautExtension::new
     );
-    private static TestContext testContext;
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
-    @Override
-    public void beforeClass(final LifecycleContext context, final Class<?> testClass,
-                            final MicronautTestValue testAnnotationValue) {
-        super.beforeClass(context, testClass, testAnnotationValue);
+    public void beforeContainer(final ContainerLifecycleContext context) throws Exception {
+        final var micronautTestValue = buildMicronautTestValue(context.optionalContainerClass().orElse(null));
+        beforeClass(context, context.optionalContainerClass().orElse(null), micronautTestValue);
+        beforeTestClass(buildContainerContext(context));
     }
 
-    @Override
-    public void beforeEach(final LifecycleContext context, final Object testInstance,
-                           final AnnotatedElement method, final List<Property> propertyAnnotations) {
-        super.beforeEach(context, testInstance, method, propertyAnnotations);
+    public void afterContainer(final ContainerLifecycleContext context) throws Exception {
+        afterTestClass(buildContainerContext(context));
+        afterClass(context);
     }
 
-    @Override
-    protected void alignMocks(final LifecycleContext context, final Object instance) {
-        if (specDefinition == null || !(context instanceof PropertyLifecycleContext)) {
-            return;
-        }
-        final PropertyLifecycleContext plc = (PropertyLifecycleContext) context;
-        plc.testInstances()
-                .stream()
-                .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
-                .findAny()
-                .ifPresent(specInstance -> {
-                    final List<Method> mockBeanMethods = Arrays.stream(specInstance.getClass().getDeclaredMethods())
-                            .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .collect(Collectors.toList());
+    public void beforeProperty(final PropertyLifecycleContext context) throws Exception {
+        final var testContext = buildPropertyContext(context);
+        injectEnclosingTestInstances(context);
+        beforeEach(
+                context,
+                context.testInstance(),
+                context.targetMethod(),
+                JqwikAnnotationSupport.findRepeatableAnnotationOnElementOrContainer(
+                        context.optionalElement().orElse(null),
+                        Property.class
+                )
+        );
+        beforeTestMethod(testContext);
+    }
 
-                    final List<Field> mockBeanFields = Arrays.stream(specInstance.getClass().getDeclaredFields())
-                            .filter(e -> e.isAnnotationPresent(MockBean.class))
-                            .collect(Collectors.toList());
+    public void afterProperty(final PropertyLifecycleContext context) {
+        final var testContext = buildPropertyContext(context);
+        runHooks(() -> {
+            afterEach(context);
+            afterTestMethod(testContext);
+            return null;
+        });
+    }
 
-                    for (final FieldInjectionPoint<?, ?> injectedField : specDefinition.getInjectedFields()) {
-                        final Optional<Method> mockBeanMethod = mockBeanMethods.stream()
-                                .filter(e -> e.getReturnType().equals(injectedField.getType()))
-                                .findFirst();
+    public void preBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
+        final var testContext = buildPropertyContext(context);
+        beforeSetupTest(testContext);
+    }
 
-                        final Optional<Field> mockBeanField = mockBeanFields.stream()
-                                .filter(e -> e.getType().equals(injectedField.getType()))
-                                .findFirst();
+    public void postBeforePropertyMethod(final PropertyLifecycleContext context) throws Throwable {
+        final var testContext = buildPropertyContext(context);
+        afterSetupTest(testContext);
+    }
 
-                        mockBeanMethod.ifPresent(e -> {
-                                    try {
-                                        final Field field = injectedField.getField();
-                                        field.setAccessible(true);
-                                        e.setAccessible(true);
-                                        final Object result = e.invoke(specInstance);
-                                        field.set(specInstance, result);
-                                    } catch (final IllegalAccessException | InvocationTargetException ex) {
-                                        throw new RuntimeException(ex);
-                                    }
-                                }
-                        );
+    public void preAfterPropertyMethod(final PropertyLifecycleContext context) {
+        final var testContext = buildPropertyContext(context);
+        runHooks(() -> {
+            beforeCleanupTest(testContext);
+            return null;
+        });
+    }
 
-                        mockBeanField.ifPresent(e -> {
-                            try {
-                                final Field field = injectedField.getField();
-                                field.setAccessible(true);
-                                e.setAccessible(true);
-                                field.set(specInstance, e.get(specInstance));
-                            } catch (final IllegalAccessException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        });
-                    }
-                });
+    public void postAfterPropertyMethod(final PropertyLifecycleContext context) {
+        final var testContext = buildPropertyContext(context);
+        runHooks(() -> {
+            afterCleanupTest(testContext);
+            return null;
+        });
+    }
+
+    public void beforePropertyExecution(final PropertyLifecycleContext context) throws Exception {
+        final var testContext = buildPropertyContext(context);
+        beforeTestExecution(testContext);
+    }
+
+    public void afterPropertyExecution(final PropertyLifecycleContext context) {
+        final var testContext = buildPropertyContext(context);
+        runHooks(() -> {
+            afterTestExecution(testContext);
+            return null;
+        });
     }
 
     @Override
     protected void resolveTestProperties(final LifecycleContext context, final MicronautTestValue testAnnotationValue,
                                          final Map<String, Object> testProperties) {
-        if (!context.optionalContainerClass().isPresent()) {
+        context.optionalContainerClass()
+                .map(context::newInstance)
+                .filter(TestPropertyProvider.class::isInstance)
+                .map(TestPropertyProvider.class::cast)
+                .map(TestPropertyProvider::getProperties)
+                .ifPresent(testProperties::putAll);
+    }
+
+    @Override
+    protected void alignMocks(final LifecycleContext context, final Object instance) {
+        if (specDefinition == null || !(context instanceof PropertyLifecycleContext plc)) {
             return;
         }
-        final Class<?> testContainerClass = context.optionalContainerClass().get();
-        final Object testClassInstance = context.newInstance(testContainerClass);
+        plc.testInstances()
+                .stream()
+                .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
+                .findAny()
+                .ifPresent(MockInjector.inject(specDefinition));
+    }
 
-        if (testClassInstance instanceof TestPropertyProvider) {
-            final Map<String, String> dynamicPropertiesToAdd = ((TestPropertyProvider) testClassInstance).getProperties();
-            testProperties.putAll(dynamicPropertiesToAdd);
+    private void runHooks(final Callable<Void> hooks) {
+        try {
+            hooks.call();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public TestContext testContext(final PropertyLifecycleContext context) {
-        if (testContext != null) {
-            return testContext;
+    private void injectEnclosingTestInstances(final LifecycleContext lifecycleContext) {
+        if (lifecycleContext instanceof PropertyLifecycleContext plc) {
+            plc.testInstances().forEach(applicationContext::inject);
         }
-        testContext = new TestContext(
+    }
+
+    /**
+     * Builds a {@link MicronautTestValue} object from the provided class (e.g. by scanning annotations).
+     *
+     * @param testClass the class to extract builder configuration from
+     * @return a MicronautTestValue to configure the test application context
+     */
+    private MicronautTestValue buildMicronautTestValue(final Class<?> testClass) {
+        return JqwikAnnotationSupport.findContainerAnnotations(testClass, JqwikMicronautTest.class)
+                .stream()
+                .map(this::buildValueObject)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private MicronautTestValue buildValueObject(final JqwikMicronautTest micronautTest) {
+        return new MicronautTestValue(
+                micronautTest.application(),
+                micronautTest.environments(),
+                micronautTest.packages(),
+                micronautTest.propertySources(),
+                micronautTest.rollback(),
+                micronautTest.transactional(),
+                micronautTest.rebuildContext(),
+                micronautTest.contextBuilder(),
+                micronautTest.transactionMode(),
+                micronautTest.startApplication(),
+                micronautTest.resolveParameters()
+        );
+    }
+
+    private TestContext buildPropertyContext(final PropertyLifecycleContext context) {
+        return new TestContext(
                 applicationContext,
                 context.containerClass(),
                 context.targetMethod(),
                 context.testInstance(),
-                null
+                null // TODO: How to handle exceptions that occur during hook executions?
         );
-        return testContext;
     }
 
-    public TestContext testContext(final TryLifecycleContext context) {
-        if (testContext != null) {
-            return testContext;
-        }
-        testContext = new TestContext(
+    private TestContext buildContainerContext(final ContainerLifecycleContext context) {
+        return new TestContext(
                 applicationContext,
-                context.containerClass(),
-                context.targetMethod(),
-                context.testInstance(),
+                context.optionalContainerClass().orElse(null),
+                context.optionalElement().orElse(null),
+                null,
                 null
         );
-        return testContext;
-    }
-
-    public TestMethodInvocationContext<Object> getTestMethodInvocationContext(final TestContext testContext) {
-        return new TestMethodInvocationContext<Object>() {
-            @Override
-            public TestContext getTestContext() {
-                return testContext;
-            }
-
-            @Override
-            public Object proceed() {
-                return null;
-            }
-        };
     }
 }

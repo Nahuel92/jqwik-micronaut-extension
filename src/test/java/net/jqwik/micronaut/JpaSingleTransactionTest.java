@@ -2,6 +2,7 @@ package net.jqwik.micronaut;
 
 import io.micronaut.test.annotation.TransactionMode;
 import jakarta.inject.Inject;
+import net.jqwik.api.Example;
 import net.jqwik.api.Property;
 import net.jqwik.api.lifecycle.AfterProperty;
 import net.jqwik.api.lifecycle.BeforeProperty;
@@ -22,23 +23,13 @@ class JpaSingleTransactionTest {
 
     @BeforeProperty
     void setUp() {
-        // FIXME: This should be done automatically
-        if (!entityManager.getTransaction().isActive()) {
-            entityManager.getTransaction().begin();
-        }
-        // FIXME: This should be done automatically
-
-        final Book book = new Book();
+        final var book = new Book();
         book.setTitle("The Stand");
         entityManager.persist(book);
     }
 
     @AfterProperty
     void tearDown() {
-        // FIXME: This should be done automatically
-        entityManager.getTransaction().rollback();
-        // ^^ FIXME: This should be done automatically
-
         // check setup was rolled back
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);
@@ -52,7 +43,7 @@ class JpaSingleTransactionTest {
         assertThat(entityManager.createQuery(query).getResultList()).hasSize(1);
     }
 
-    @Property(tries = 1)
+    @Example
     void testPersistTwo() {
         final CriteriaQuery<Book> query = entityManager.getCriteriaBuilder().createQuery(Book.class);
         query.from(Book.class);
