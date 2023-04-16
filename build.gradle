@@ -1,5 +1,5 @@
 plugins {
-    id('io.micronaut.minimal.library') version "3.7.5"
+    id('io.micronaut.minimal.library') version "3.7.8"
 }
 
 version = "0.1"
@@ -41,5 +41,5 @@ test {
 }
 
 wrapper {
-    gradleVersion = '8.0.2'
+    gradleVersion = '8.1'
 }
