@@ -3,7 +3,6 @@ package net.jqwik.micronaut.extension;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.test.annotation.MicronautTestValue;
-import io.micronaut.test.annotation.MockBean;
 import io.micronaut.test.context.TestContext;
 import io.micronaut.test.extensions.AbstractMicronautExtension;
 import io.micronaut.test.support.TestPropertyProvider;
@@ -15,13 +14,8 @@ import net.jqwik.api.lifecycle.Store;
 import net.jqwik.engine.support.JqwikAnnotationSupport;
 import net.jqwik.micronaut.annotation.JqwikMicronautTest;
 
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 
 public class JqwikMicronautExtension extends AbstractMicronautExtension<LifecycleContext> {
     public static final Store<JqwikMicronautExtension> STORE = Store.getOrCreate(
@@ -128,50 +122,7 @@ public class JqwikMicronautExtension extends AbstractMicronautExtension<Lifecycl
                 .stream()
                 .filter(e -> e.getClass().equals(specDefinition.getBeanType()))
                 .findAny()
-                .ifPresent(injectMocks());
-    }
-
-    private Consumer<Object> injectMocks() {
-        return specInstance -> {
-            final Class<?> specInstanceClass = specInstance.getClass();
-            final var mockBeanAnnotatedMethods = getMockBeanAnnotated(specInstanceClass.getDeclaredMethods());
-            final var mockBeanAnnotatedFields = getMockBeanAnnotated(specInstanceClass.getDeclaredFields());
-            for (final var injectedField : specDefinition.getInjectedFields()) {
-                mockBeanAnnotatedMethods.stream()
-                        .filter(e -> e.getReturnType().equals(injectedField.getType()))
-                        .findFirst()
-                        .ifPresent(e -> {
-                                    final Callable<?> mock = () -> e.invoke(specInstance);
-                                    injectMock(specInstance, injectedField.getField(), e, mock);
-                                }
-                        );
-                mockBeanAnnotatedFields.stream()
-                        .filter(e -> e.getType().equals(injectedField.getType()))
-                        .findFirst()
-                        .ifPresent(e -> {
-                            final Callable<?> mock = () -> e.get(specInstance);
-                            injectMock(specInstance, injectedField.getField(), e, mock);
-                        });
-            }
-        };
-    }
-
-    @SafeVarargs
-    private <T extends AccessibleObject> List<T> getMockBeanAnnotated(final T... accessibleObject) {
-        return Arrays.stream(accessibleObject)
-                .filter(e -> e.isAnnotationPresent(MockBean.class))
-                .toList();
-    }
-
-    private void injectMock(final Object specInstance, final Field fieldToInject,
-                            final AccessibleObject accessibleObject, final Callable<?> mockProvider) {
-        fieldToInject.setAccessible(true);
-        accessibleObject.setAccessible(true);
-        try {
-            fieldToInject.set(specInstance, mockProvider.call());
-        } catch (final Exception ex) {
-            throw new RuntimeException(ex);
-        }
+                .ifPresent(MockInjector.inject(specDefinition));
     }
 
     private void runHooks(final Callable<Void> hooks) {
