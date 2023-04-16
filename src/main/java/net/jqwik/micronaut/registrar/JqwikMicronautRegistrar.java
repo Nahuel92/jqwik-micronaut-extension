@@ -1,4 +1,4 @@
-package net.jqwik.micronaut.registar;
+package net.jqwik.micronaut.registrar;
 
 import net.jqwik.api.lifecycle.PropagationMode;
 import net.jqwik.api.lifecycle.RegistrarHook;

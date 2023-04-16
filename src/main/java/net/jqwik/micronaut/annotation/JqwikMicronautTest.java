@@ -5,7 +5,7 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.test.annotation.TransactionMode;
 import net.jqwik.api.lifecycle.AddLifecycleHook;
-import net.jqwik.micronaut.registar.JqwikMicronautRegistrar;
+import net.jqwik.micronaut.registrar.JqwikMicronautRegistrar;
 import org.apiguardian.api.API;
 
 import java.lang.annotation.ElementType;
