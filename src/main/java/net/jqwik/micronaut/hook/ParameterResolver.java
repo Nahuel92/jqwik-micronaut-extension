@@ -9,7 +9,6 @@ import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.core.util.StringUtils;
-import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.Nonnull;
@@ -23,6 +22,7 @@ import net.jqwik.micronaut.extension.JqwikMicronautExtension;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Parameter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -62,29 +62,25 @@ public class ParameterResolver implements ResolveParameterHook {
 
     private Argument<?> getArgument(final ParameterResolutionContext parameterContext,
                                     final ApplicationContext applicationContext) {
+        final Executable declaringExecutable = parameterContext.parameter().getDeclaringExecutable();
+        final int index = parameterContext.index();
+        if (declaringExecutable instanceof Constructor) {
+            final Class<?> declaringClass = declaringExecutable.getDeclaringClass();
+            return applicationContext.findBeanDefinition(declaringClass)
+                    .map(e -> e.getConstructor().getArguments())
+                    .filter(e -> index < e.length)
+                    .map(e -> e[index])
+                    .orElse(null);
+        }
         try {
-            final Executable declaringExecutable = parameterContext.parameter().getDeclaringExecutable();
-            final int index = parameterContext.index();
-            if (declaringExecutable instanceof Constructor) {
-                final Class<?> declaringClass = declaringExecutable.getDeclaringClass();
-                final BeanDefinition<?> beanDefinition = applicationContext.findBeanDefinition(declaringClass)
-                        .orElse(null);
-                if (beanDefinition != null) {
-                    final Argument<?>[] arguments = beanDefinition.getConstructor().getArguments();
-                    if (index < arguments.length) {
-                        return arguments[index];
-                    }
-                }
-            } else {
-                final ExecutableMethod<?, Object> executableMethod = applicationContext.getExecutableMethod(
-                        declaringExecutable.getDeclaringClass(),
-                        declaringExecutable.getName(),
-                        declaringExecutable.getParameterTypes()
-                );
-                final Argument<?>[] arguments = executableMethod.getArguments();
-                if (index < arguments.length) {
-                    return arguments[index];
-                }
+            final ExecutableMethod<?, Object> executableMethod = applicationContext.getExecutableMethod(
+                    declaringExecutable.getDeclaringClass(),
+                    declaringExecutable.getName(),
+                    declaringExecutable.getParameterTypes()
+            );
+            final Argument<?>[] arguments = executableMethod.getArguments();
+            if (index < arguments.length) {
+                return arguments[index];
             }
         } catch (final NoSuchMethodException e) {
             return null;
@@ -109,28 +105,34 @@ public class ParameterResolver implements ResolveParameterHook {
                 return applicationContext.getBean(parameterContext.parameter().getType());
             }
             final var parameter = parameterContext.parameter();
-            if (argument.isAnnotationPresent(Value.class) || argument.isAnnotationPresent(Property.class)) {
-                if (parameter.isAnnotationPresent(Value.class)) {
-                    return applicationContext.getEnvironment()
-                            .getProperty(parameter.getAnnotation(Value.class).value()
-                                            .replaceAll("[${}]", StringUtils.EMPTY_STRING),
-                                    parameter.getType()
-                            ).orElseThrow(() ->
-                                    new JqwikException("Unresolvable property specified to @Value: " + parameter.getName())
-                            );
-                }
-
-                final var propertyName = parameter.getAnnotation(Property.class).name();
-                if (propertyName.isEmpty()) {
-                    return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
-                }
-                return applicationContext.getEnvironment()
-                        .getProperty(propertyName, parameter.getType())
-                        .orElseThrow(() ->
-                                new JqwikException("Unresolvable property specified to @Property: " + parameter.getName())
-                        );
+            if (parameter.isAnnotationPresent(Value.class)) {
+                return propertyFromValueAnnotation(applicationContext, parameter);
+            }
+            if (argument.isAnnotationPresent(Property.class)) {
+                return propertyFromPropertyAnnotation(applicationContext, argument, parameter);
             }
             return applicationContext.getBean(argument.getType(), resolveQualifier(argument));
+        }
+
+        private Object propertyFromValueAnnotation(final ApplicationContext applicationContext, final Parameter parameter) {
+            return applicationContext.getEnvironment()
+                    .getProperty(getValueFromValueAnnotation(parameter), parameter.getType())
+                    .orElseThrow(() -> new JqwikException("Unresolvable property specified to @Value: " + parameter.getName()));
+        }
+
+        private String getValueFromValueAnnotation(final Parameter parameter) {
+            return parameter.getAnnotation(Value.class).value().replaceAll("[${}]", StringUtils.EMPTY_STRING);
+        }
+
+        private Object propertyFromPropertyAnnotation(final ApplicationContext applicationContext,
+                                                      final Argument<?> argument, final Parameter parameter) {
+            final var propertyName = parameter.getAnnotation(Property.class).name();
+            if (propertyName.isEmpty()) {
+                return applicationContext.getBean(parameter.getType(), resolveQualifier(argument));
+            }
+            return applicationContext.getEnvironment()
+                    .getProperty(propertyName, parameter.getType())
+                    .orElseThrow(() -> new JqwikException("Unresolvable property specified to @Property: " + parameter.getName()));
         }
     }
 }
